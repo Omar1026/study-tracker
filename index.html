@@ -3,26 +3,38 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f7f3">
-  <meta name="description" content="متابع الدراسة: سجّل جلسات دراستك، حدّد هدفك اليومي، وتابع تقدّمك من أي جهاز.">
-  <title>متابع الدراسة</title>
+  <meta name="theme-color" content="#0e5c54">
+  <meta name="description" content="اجتماع النقط: سجّل جلسات دراستك، نظّم مهامك وخطة أسبوعك، وتابع تقدّمك من أي جهاز.">
+  <title>اجتماع النقط — رفيقك في رحلة العلم</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="page-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="متابع الدراسة - الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">م</span><span>متابع الدراسة</span></a>
+      <a class="brand" href="#" aria-label="اجتماع النقط - الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">ن</span><span>اجتماع النقط</span></a>
       <div class="topbar-actions"><span class="today-label" id="today-label"></span><button class="button button-quiet hidden" id="sign-out" type="button">تسجيل الخروج</button></div>
     </header>
 
     <section class="intro" aria-labelledby="page-title">
-      <p class="eyebrow">خطوة صغيرة كل يوم</p><h1 id="page-title">خلّ وقتك يثمر.</h1>
-      <p class="intro-copy">سجّل جلساتك، وتابع تقدّمك الدراسي من أي جهاز.</p>
+      <p class="eyebrow">خطوة صغيرة كل يوم</p><h1 id="page-title">اجمع النقط… يتكوّن السليل.</h1>
+      <p class="intro-copy">سجّل جلساتك، ونظّم مهامك وخطتك، وتابع تقدّمك الدراسي من أي جهاز.</p>
     </section>
 
+    <section class="poem-card" aria-label="بيت من الشعر في طلب العلم">
+      <span class="poem-corner poem-corner-tr" aria-hidden="true"></span>
+      <span class="poem-corner poem-corner-tl" aria-hidden="true"></span>
+      <span class="poem-corner poem-corner-br" aria-hidden="true"></span>
+      <span class="poem-corner poem-corner-bl" aria-hidden="true"></span>
+      <p class="poem-verse"><span>اليوم شيءٌ وغدًا مثلُه</span><i aria-hidden="true">✦</i><span>من نُخب العلمِ التي تُلتقطْ</span></p>
+      <p class="poem-verse"><span>يُحصِّل المَرء بها حكمةً</span><i aria-hidden="true">✦</i><span>وإنما السيلُ اجتماع النقطْ</span></p>
+      <p class="poem-caption">كل جلسة نقطة… والسيل اجتماع النقط</p>
+    </section>
     <section class="panel auth-panel" id="auth-panel" aria-labelledby="auth-heading">
       <div class="panel-heading"><div><p class="eyebrow">حسابك الدراسي</p><h2 id="auth-heading">تسجيل الدخول</h2></div><span class="heading-icon" aria-hidden="true">↗</span></div>
       <p class="auth-description" id="auth-description">سجّل الدخول لمتابعة جلساتك المحفوظة في حسابك.</p>
@@ -47,7 +59,6 @@
         <button class="button button-primary" type="submit" id="recovery-submit">حفظ كلمة المرور <span aria-hidden="true">←</span></button>
       </form>
     </section>
-
     <div id="student-area" class="hidden">
       <section class="stats" aria-label="إحصاءات الدراسة اليوم">
         <article class="stat-card stat-primary"><span class="stat-icon" aria-hidden="true">◷</span><div class="stat-body"><p class="stat-label">وقت الدراسة اليوم</p><p class="stat-value"><span id="today-hours">٠</span> <small>ساعة</small></p><p class="stat-detail" id="today-minutes">٠ دقيقة إجمالًا</p><div class="goal-progress" aria-hidden="true"><div class="goal-progress-fill" id="goal-progress-fill"></div></div><p class="stat-detail" id="goal-progress-text"></p></div></article>
@@ -55,36 +66,76 @@
         <article class="stat-card goal-card"><span class="stat-icon soft" aria-hidden="true">◎</span><div class="stat-body"><p class="stat-label">الهدف اليومي</p><div class="goal-row"><input id="goal-input" type="number" min="5" max="1440" step="5" value="120" aria-label="الهدف اليومي بالدقائق"><span class="goal-unit">دقيقة</span><button class="button button-quiet" type="button" id="goal-save">حفظ</button></div><p class="form-message" id="goal-message" role="status" aria-live="polite"></p></div></article>
       </section>
       <p class="form-message cloud-message" id="cloud-message" role="status" aria-live="polite"></p>
-      <div class="content-grid">
-        <section class="panel form-panel" aria-labelledby="form-heading">
-          <div class="panel-heading"><div><p class="eyebrow">ابدأ الآن</p><h2 id="form-heading">أضف جلسة دراسة</h2></div><span class="heading-icon" aria-hidden="true">＋</span></div>
-          <form id="session-form" novalidate>
-            <label for="study-date">تاريخ الجلسة</label><input id="study-date" name="study-date" type="date" required>
-            <label for="subject">اسم المادة</label><input id="subject" name="subject" type="text" placeholder="مثال: الرياضيات" maxlength="60" required>
-            <div class="field-row"><div class="duration-field"><label for="duration">مدة الدراسة</label><div class="input-with-unit"><input id="duration" name="duration" type="number" min="1" max="1440" step="1" placeholder="45" required><span>دقيقة</span></div></div></div>
-            <div class="timer-row"><span class="timer-display" id="timer-display">٠٠:٠٠:٠٠</span><button class="button button-quiet" type="button" id="timer-toggle">ابدأ المؤقت</button></div>
-            <label for="note">ملاحظة <span class="optional">(اختياري)</span></label><textarea id="note" name="note" rows="3" maxlength="240" placeholder="ما الذي أنجزته في هذه الجلسة؟"></textarea>
-            <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
-            <div class="form-actions"><button class="button button-primary" type="submit" id="submit-button">حفظ الجلسة <span aria-hidden="true">←</span></button><button class="button button-quiet hidden" type="button" id="cancel-edit">إلغاء التعديل</button></div>
-          </form>
-          <p class="privacy-note"><span aria-hidden="true">♧</span> جلساتك مرتبطة بحسابك ومحمية بسياسات قاعدة البيانات.</p>
-        </section>
-        <section class="panel sessions-panel" aria-labelledby="sessions-heading">
-          <div class="panel-heading sessions-heading"><div><p class="eyebrow">إنجازاتك</p><h2 id="sessions-heading">جلساتي</h2></div><div class="heading-tools"><span class="count-badge" id="session-badge">٠ جلسات</span><button class="text-action" type="button" id="export-csv">تصدير CSV</button></div></div>
-          <div class="view-tabs" role="tablist" aria-label="اختيار الفترة">
-            <button class="view-tab is-active" type="button" data-view="today" role="tab" aria-selected="true">اليوم</button>
-            <button class="view-tab" type="button" data-view="yesterday" role="tab" aria-selected="false">أمس</button>
-            <button class="view-tab" type="button" data-view="week" role="tab" aria-selected="false">آخر ٧ أيام</button>
-            <button class="view-tab" type="button" data-view="month" role="tab" aria-selected="false">هذا الشهر</button>
-          </div>
-          <div class="session-list" id="session-list" aria-live="polite"></div>
-          <div class="empty-state" id="empty-state"><span class="empty-icon" aria-hidden="true">✳</span><h3 id="empty-title">مساحتك جاهزة لأول إنجاز</h3><p id="empty-hint">أضف جلسة دراستك الأولى، وستظهر هنا.</p></div>
+      <nav class="section-tabs" role="tablist" aria-label="أقسام التطبيق">
+        <button class="section-tab is-active" type="button" data-section="sessions" role="tab" aria-selected="true"><span aria-hidden="true">◷</span> جلساتي</button>
+        <button class="section-tab" type="button" data-section="tasks" role="tab" aria-selected="false"><span aria-hidden="true">☑</span> مهامي</button>
+        <button class="section-tab" type="button" data-section="planner" role="tab" aria-selected="false"><span aria-hidden="true">▦</span> التخطيط</button>
+      </nav>
+      <div class="section-view" id="sessions-section">
+        <div class="content-grid">
+          <section class="panel form-panel" aria-labelledby="form-heading">
+            <div class="panel-heading"><div><p class="eyebrow">ابدأ الآن</p><h2 id="form-heading">أضف جلسة دراسة</h2></div><span class="heading-icon" aria-hidden="true">＋</span></div>
+            <form id="session-form" novalidate>
+              <label for="study-date">تاريخ الجلسة</label><input id="study-date" name="study-date" type="date" required>
+              <label for="subject">اسم المادة</label><input id="subject" name="subject" type="text" placeholder="مثال: الرياضيات" maxlength="60" required>
+              <div class="field-row"><div class="duration-field"><label for="duration">مدة الدراسة</label><div class="input-with-unit"><input id="duration" name="duration" type="number" min="1" max="1440" step="1" placeholder="45" required><span>دقيقة</span></div></div></div>
+              <div class="timer-row"><span class="timer-display" id="timer-display">٠٠:٠٠:٠٠</span><button class="button button-quiet" type="button" id="timer-toggle">ابدأ المؤقت</button></div>
+              <label for="note">ملاحظة <span class="optional">(اختياري)</span></label><textarea id="note" name="note" rows="3" maxlength="240" placeholder="ما الذي أنجزته في هذه الجلسة؟"></textarea>
+              <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+              <div class="form-actions"><button class="button button-primary" type="submit" id="submit-button">حفظ الجلسة <span aria-hidden="true">←</span></button><button class="button button-quiet hidden" type="button" id="cancel-edit">إلغاء التعديل</button></div>
+            </form>
+            <p class="privacy-note"><span aria-hidden="true">♧</span> جلساتك مرتبطة بحسابك ومحمية بسياسات قاعدة البيانات.</p>
+          </section>
+          <section class="panel sessions-panel" aria-labelledby="sessions-heading">
+            <div class="panel-heading sessions-heading"><div><p class="eyebrow">إنجازاتك</p><h2 id="sessions-heading">جلساتي</h2></div><div class="heading-tools"><span class="count-badge" id="session-badge">٠ جلسات</span><button class="text-action" type="button" id="export-csv">تصدير CSV</button></div></div>
+            <div class="view-tabs" role="tablist" aria-label="اختيار الفترة">
+              <button class="view-tab is-active" type="button" data-view="today" role="tab" aria-selected="true">اليوم</button>
+              <button class="view-tab" type="button" data-view="yesterday" role="tab" aria-selected="false">أمس</button>
+              <button class="view-tab" type="button" data-view="week" role="tab" aria-selected="false">آخر ٧ أيام</button>
+              <button class="view-tab" type="button" data-view="month" role="tab" aria-selected="false">هذا الشهر</button>
+            </div>
+            <div class="session-list" id="session-list" aria-live="polite"></div>
+            <div class="empty-state" id="empty-state"><span class="empty-icon" aria-hidden="true">✳</span><h3 id="empty-title">مساحتك جاهزة لأول إنجاز</h3><p id="empty-hint">أضف جلسة دراستك الأولى، وستظهر هنا.</p></div>
+          </section>
+        </div>
+        <section class="panel chart-panel" aria-labelledby="chart-heading">
+          <div class="panel-heading"><div><p class="eyebrow">نشاطك الأسبوعي</p><h2 id="chart-heading">آخر ٧ أيام</h2></div><span class="count-badge" id="chart-total">٠ دقيقة</span></div>
+          <div class="chart" id="chart" role="img" aria-label="مخطط دقائق الدراسة خلال آخر سبعة أيام"></div>
         </section>
       </div>
-      <section class="panel chart-panel" aria-labelledby="chart-heading">
-        <div class="panel-heading"><div><p class="eyebrow">نشاطك الأسبوعي</p><h2 id="chart-heading">آخر ٧ أيام</h2></div><span class="count-badge" id="chart-total">٠ دقيقة</span></div>
-        <div class="chart" id="chart" role="img" aria-label="مخطط دقائق الدراسة خلال آخر سبعة أيام"></div>
-      </section>
+      <div class="section-view hidden" id="tasks-section">
+        <section class="panel" aria-labelledby="tasks-heading">
+          <div class="panel-heading"><div><p class="eyebrow">ما أنوي إنجازه</p><h2 id="tasks-heading">مهامي</h2></div><div class="heading-tools"><span class="count-badge" id="task-badge">٠ مهام</span></div></div>
+          <form id="task-form" class="task-form" novalidate>
+            <input id="task-title" type="text" placeholder="مثال: حل مسائل الفصل الثالث" maxlength="120" required aria-label="عنوان المهمة">
+            <input id="task-due" type="date" aria-label="تاريخ الاستحقاق (اختياري)">
+            <button class="button button-primary" type="submit" id="task-add">إضافة المهمة <span aria-hidden="true">＋</span></button>
+          </form>
+          <p class="form-message" id="task-message" role="status" aria-live="polite"></p>
+          <ul class="task-list" id="task-list"></ul>
+          <div class="empty-state hidden" id="task-empty"><span class="empty-icon" aria-hidden="true">☑</span><h3>لا توجد مهام بعد</h3><p>أضف مهامك الصغيرة، فتحقيقها نقطة في سيل إنجازك.</p></div>
+        </section>
+      </div>
+      <div class="section-view hidden" id="planner-section">
+        <section class="panel" aria-labelledby="plan-heading">
+          <div class="panel-heading"><div><p class="eyebrow">جدولك الأسبوعي</p><h2 id="plan-heading">خطة الأسبوع</h2></div><span class="heading-icon" aria-hidden="true">▦</span></div>
+          <form id="plan-form" class="task-form" novalidate>
+            <input id="plan-title" type="text" placeholder="مثال: مراجعة الإحياء" maxlength="120" required aria-label="عنوان البند">
+            <select id="plan-day" aria-label="اليوم">
+              <option value="6">السبت</option><option value="0">الأحد</option><option value="1">الاثنين</option><option value="2">الثلاثاء</option><option value="3">الأربعاء</option><option value="4">الخميس</option><option value="5">الجمعة</option>
+            </select>
+            <input id="plan-time" type="time" aria-label="الوقت (اختياري)">
+            <button class="button button-primary" type="submit" id="plan-add">أضف للخطة <span aria-hidden="true">＋</span></button>
+          </form>
+          <p class="form-message" id="plan-message" role="status" aria-live="polite"></p>
+          <div class="week-grid" id="week-plan"></div>
+        </section>
+        <section class="panel" aria-labelledby="calendar-heading">
+          <div class="panel-heading"><div><p class="eyebrow">نظرة شهرية</p><h2 id="calendar-heading">التقويم الشهري</h2></div><div class="heading-tools"><button class="text-action cal-nav" type="button" id="cal-prev" aria-label="الشهر السابق">›</button><span class="count-badge" id="cal-label"></span><button class="text-action cal-nav" type="button" id="cal-next" aria-label="الشهر التالي">‹</button></div></div>
+          <div class="calendar" id="calendar"></div>
+          <p class="calendar-legend"><span class="legend-swatch heat-1"></span> خفيف <span class="legend-swatch heat-2"></span> متوسط <span class="legend-swatch heat-3"></span> مكثّف <span class="legend-dot"></span> يوم فيه مهام</p>
+        </section>
+      </div>
     </div>
     <footer>كل دقيقة تركيز تصنع فرقًا <span aria-hidden="true">✦</span></footer>
   </main>

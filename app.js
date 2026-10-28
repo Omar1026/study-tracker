@@ -29,17 +29,44 @@
   const timerDisplay = document.querySelector("#timer-display");
   const timerToggle = document.querySelector("#timer-toggle");
 
+  // المهام
+  const taskForm = document.querySelector("#task-form");
+  const taskTitleInput = document.querySelector("#task-title");
+  const taskDueInput = document.querySelector("#task-due");
+  const taskList = document.querySelector("#task-list");
+  const taskBadge = document.querySelector("#task-badge");
+  const taskMessage = document.querySelector("#task-message");
+  const taskEmpty = document.querySelector("#task-empty");
+
+  // التخطيط
+  const planForm = document.querySelector("#plan-form");
+  const planTitleInput = document.querySelector("#plan-title");
+  const planDayInput = document.querySelector("#plan-day");
+  const planTimeInput = document.querySelector("#plan-time");
+  const planMessage = document.querySelector("#plan-message");
+  const weekPlan = document.querySelector("#week-plan");
+  const calendarElement = document.querySelector("#calendar");
+  const calLabel = document.querySelector("#cal-label");
+  const calPrev = document.querySelector("#cal-prev");
+  const calNext = document.querySelector("#cal-next");
+
   let supabaseClient = null;
   let currentUser = null;
   let sessions = [];
+  let tasks = [];
+  let planItems = [];
   let editingId = null;
   let isSignUp = false;
   let dailyGoal = 120;
   let currentView = "today";
+  let currentSection = "sessions";
   let timerStart = null;
   let timerInterval = null;
+  let calCursor = new Date();
 
   const DEFAULT_GOAL = 120;
+  const WEEK_ORDER = [6, 0, 1, 2, 3, 4, 5]; // السبت ثم الأحد..الجمعة
+  const WEEK_NAMES = { 0: "الأحد", 1: "الاثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
   const EMPTY_TEXT = {
     today: ["مساحتك جاهزة لأول إنجاز", "أضف جلسة دراستك الأولى، وستظهر هنا."],
     yesterday: ["لا توجد جلسات أمس", "يمكنك إضافة جلسة بأمس التاريخ من النموذج."],
@@ -62,8 +89,15 @@
   };
   const arabicNumber = (value) => new Intl.NumberFormat("ar-SA").format(value);
   const weekdayShort = (date) => new Intl.DateTimeFormat("ar-SA", { weekday: "short" }).format(date);
-  const dateShort = (dateKeyString) => new Intl.DateTimeFormat("ar-SA", { day: "numeric", month: "short" }).format(new Date(`${dateKeyString}T00:00:00`));
+  const dateShort = (key) => new Intl.DateTimeFormat("ar-SA", { day: "numeric", month: "short" }).format(new Date(`${key}T00:00:00`));
   const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+  const timeLabel = (value) => {
+    if (!value) return "";
+    const [h, m] = value.split(":").map(Number);
+    const period = h < 12 ? "ص" : "م";
+    const hour12 = h % 12 === 0 ? 12 : h % 12;
+    return `${toArabicDigits(hour12)}:${toArabicDigits(m)} ${period}`;
+  };
 
   function showMessage(element, text, success = false) {
     element.textContent = text;
@@ -97,10 +131,17 @@
     const raw = error?.message || "";
     const code = error?.code || "";
     if (code === "42501" || /permission denied/i.test(raw)) return "صلاحيات الوصول مرفوضة. تأكد من تشغيل ملف setup_supabase.sql كاملًا.";
-    if (code === "23514") return "القيم المُدخلة خارج النطاق المسموح. راجع المدة والتاريخ.";
-    if (code === "42P01" || /does not exist/i.test(raw)) return "جدول study_sessions غير موجود. شغّل ملف setup_supabase.sql في Supabase.";
+    if (code === "23514") return "القيم المُدخلة خارج النطاق المسموح. راجع القيم وأعد المحاولة.";
+    if (code === "42P01" || /does not exist/i.test(raw)) return "أحد الجداول غير موجود. شغّل ملف setup_supabase.sql في Supabase.";
     if (/Failed to fetch|NetworkError/i.test(raw)) return "تعذّر الاتصال بقاعدة البيانات. تحقق من إعداد supabase-config.js والإنترنت.";
     return "تعذّر إتمام العملية. حاول مجددًا.";
+  }
+
+  // رسالة عربية عند فتح رابط تأكيد/استعادة منتهي الصلاحية.
+  function describeUrlError(code) {
+    if (code === "otp_expired") return "انتهت صلاحية رابط التأكيد. اطلب رابطًا جديدًا من صفحة تسجيل الدخول.";
+    if (code === "access_denied") return "تم رفض الوصول. جرّب طلب رابطًا جديدًا.";
+    return "حدث خطأ أثناء معالجة الرابط. حاول تسجيل الدخول مباشرة.";
   }
 
   function setAuthMode(signUp) {
@@ -170,12 +211,12 @@
     const items = viewSessions();
     sessionBadge.textContent = `${arabicNumber(items.length)} جلسات`;
     sessionList.innerHTML = items.map((session) => {
-      const timeLabel = session.study_date === today
+      const timeLabelValue = session.study_date === today
         ? new Intl.DateTimeFormat("ar-SA", { hour: "numeric", minute: "2-digit" }).format(new Date(session.created_at))
         : `${dateShort(session.study_date)}، ${new Intl.DateTimeFormat("ar-SA", { hour: "numeric", minute: "2-digit" }).format(new Date(session.created_at))}`;
       return `
       <article class="session-item" data-id="${escapeHtml(session.id)}">
-        <div class="session-main"><h3 class="session-title">${escapeHtml(session.subject)}</h3><p class="session-time">${timeLabel}</p></div>
+        <div class="session-main"><h3 class="session-title">${escapeHtml(session.subject)}</h3><p class="session-time">${timeLabelValue}</p></div>
         <span class="session-duration">${arabicNumber(session.duration)} دقيقة</span>
         ${session.note ? `<p class="session-note">${escapeHtml(session.note)}</p>` : ""}
         <div class="session-actions"><button class="text-action edit-action" type="button">تعديل</button><button class="text-action delete delete-action" type="button">حذف</button></div>
@@ -215,7 +256,6 @@
     if (!silent) showMessage(cloudMessage, "تم تحميل جلساتك من حسابك.", true);
     render();
   }
-
   async function handleAuth(event) {
     event.preventDefault();
     const email = document.querySelector("#auth-email").value.trim();
@@ -316,6 +356,7 @@
     studentArea.classList.remove("hidden");
     signOutButton.classList.remove("hidden");
     await loadSessions();
+    await Promise.all([loadTasks(), loadPlan()]);
   }
 
   function resetForm() {
@@ -330,6 +371,8 @@
   function showSignedOut() {
     currentUser = null;
     sessions = [];
+    tasks = [];
+    planItems = [];
     studentArea.classList.add("hidden");
     signOutButton.classList.add("hidden");
     recoveryPanel.classList.add("hidden");
@@ -397,7 +440,6 @@
     tick();
     timerInterval = setInterval(tick, 1000);
   }
-
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const subject = subjectInput.value.trim();
@@ -462,6 +504,237 @@
     }
   });
 
+  // ===== المهام =====
+  async function loadTasks() {
+    const { data, error } = await supabaseClient
+      .from("tasks")
+      .select("id, title, due_date, done, created_at")
+      .eq("user_id", currentUser.id)
+      .order("done", { ascending: true })
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error(error);
+      showMessage(taskMessage, `تعذّر تحميل المهام. ${friendlyDbError(error)}`);
+      return;
+    }
+    tasks = data || [];
+    renderTasks();
+  }
+
+  function renderTasks() {
+    const today = dateKey();
+    const openCount = tasks.filter((task) => !task.done).length;
+    taskBadge.textContent = `${arabicNumber(openCount)} من ${arabicNumber(tasks.length)}`;
+    taskList.innerHTML = tasks.map((task) => {
+      let dueHtml = "";
+      if (task.due_date) {
+        const cls = task.due_date < today && !task.done ? " is-overdue" : task.due_date === today && !task.done ? " is-today" : "";
+        dueHtml = `<p class="task-due${cls}">مستحقة: ${escapeHtml(dateShort(task.due_date))}</p>`;
+      }
+      return `<li class="task-item${task.done ? " done" : ""}" data-id="${escapeHtml(task.id)}">
+        <button class="task-check" type="button" aria-label="${task.done ? "إرجاع المهمة إلى قيد العمل" : "إنجاز المهمة"}" aria-pressed="${task.done}">✓</button>
+        <div class="task-body"><p class="task-title">${escapeHtml(task.title)}</p>${dueHtml}</div>
+        <button class="text-action delete task-delete" type="button">حذف</button>
+      </li>`;
+    }).join("");
+    taskEmpty.classList.toggle("hidden", tasks.length > 0);
+  }
+
+  taskForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const title = taskTitleInput.value.trim();
+    const due = taskDueInput.value || null;
+    if (!title) return showMessage(taskMessage, "اكتب عنوان المهمة أولًا.");
+    const { data, error } = await supabaseClient
+      .from("tasks")
+      .insert({ user_id: currentUser.id, title, due_date: due })
+      .select()
+      .single();
+    if (error) {
+      showMessage(taskMessage, `تعذّر إضافة المهمة. ${friendlyDbError(error)}`);
+      console.error(error);
+      return;
+    }
+    tasks.unshift(data);
+    renderTasks();
+    renderCalendar();
+    taskForm.reset();
+    showMessage(taskMessage, "تمت إضافة المهمة إلى قائمتك.", true);
+  });
+
+  taskList.addEventListener("click", async (event) => {
+    const item = event.target.closest(".task-item");
+    if (!item) return;
+    const id = item.dataset.id;
+    const task = tasks.find((entry) => entry.id === id);
+    if (!task) return;
+    if (event.target.closest(".task-check")) {
+      const { data, error } = await supabaseClient
+        .from("tasks")
+        .update({ done: !task.done })
+        .eq("id", id)
+        .eq("user_id", currentUser.id)
+        .select()
+        .single();
+      if (error) {
+        showMessage(taskMessage, `تعذّر تحديث المهمة. ${friendlyDbError(error)}`);
+        console.error(error);
+        return;
+      }
+      tasks = tasks.map((entry) => (entry.id === id ? data : entry));
+      tasks.sort((a, b) => (a.done === b.done ? String(a.due_date || "9").localeCompare(String(b.due_date || "9")) : Number(a.done) - Number(b.done)));
+      renderTasks();
+      renderCalendar();
+      showMessage(taskMessage, data.done ? "أحسنت! أنجزت مهمة جديدة ✦" : "أُعيدت المهمة إلى قيد العمل.", true);
+    }
+    if (event.target.closest(".task-delete")) {
+      if (!window.confirm("هل تريد حذف هذه المهمة؟")) return;
+      const { error } = await supabaseClient.from("tasks").delete().eq("id", id).eq("user_id", currentUser.id);
+      if (error) {
+        showMessage(taskMessage, `تعذّر حذف المهمة. ${friendlyDbError(error)}`);
+        console.error(error);
+        return;
+      }
+      tasks = tasks.filter((entry) => entry.id !== id);
+      renderTasks();
+      renderCalendar();
+      showMessage(taskMessage, "تم حذف المهمة.", true);
+    }
+  });
+  // ===== التخطيط الأسبوعي =====
+  async function loadPlan() {
+    const { data, error } = await supabaseClient
+      .from("plan_items")
+      .select("id, title, weekday, start_time, created_at")
+      .eq("user_id", currentUser.id)
+      .order("weekday", { ascending: true })
+      .order("start_time", { ascending: true, nullsFirst: false });
+    if (error) {
+      console.error(error);
+      showMessage(planMessage, `تعذّر تحميل الخطة. ${friendlyDbError(error)}`);
+      return;
+    }
+    planItems = data || [];
+    renderPlan();
+    renderCalendar();
+  }
+
+  function renderPlan() {
+    const todayWeekday = new Date().getDay();
+    weekPlan.innerHTML = WEEK_ORDER.map((weekday) => {
+      const items = planItems.filter((item) => item.weekday === weekday);
+      const body = items.length
+        ? items.map((item) => `<li class="plan-item" data-id="${escapeHtml(item.id)}">
+            ${item.start_time ? `<span class="plan-time">${escapeHtml(timeLabel(item.start_time))}</span>` : ""}
+            <span class="plan-title">${escapeHtml(item.title)}</span>
+            <button class="plan-remove" type="button" aria-label="حذف البند">×</button>
+          </li>`).join("")
+        : '<li class="week-empty">لا بنود</li>';
+      return `<div class="week-day${weekday === todayWeekday ? " is-today" : ""}" data-weekday="${weekday}">
+        <div class="week-day-head"><span class="week-day-name">${WEEK_NAMES[weekday]}</span><button class="week-add" type="button" aria-label="إضافة بند إلى ${WEEK_NAMES[weekday]}">＋</button></div>
+        <ul class="week-items">${body}</ul>
+      </div>`;
+    }).join("");
+  }
+
+  planForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const title = planTitleInput.value.trim();
+    const weekday = Number(planDayInput.value);
+    const startTime = planTimeInput.value || null;
+    if (!title) return showMessage(planMessage, "اكتب عنوان البند أولًا.");
+    const { data, error } = await supabaseClient
+      .from("plan_items")
+      .insert({ user_id: currentUser.id, title, weekday, start_time: startTime })
+      .select()
+      .single();
+    if (error) {
+      showMessage(planMessage, `تعذّر إضافة البند. ${friendlyDbError(error)}`);
+      console.error(error);
+      return;
+    }
+    planItems.push(data);
+    planItems.sort((a, b) => (a.weekday === b.weekday ? String(a.start_time || "99").localeCompare(String(b.start_time || "99")) : a.weekday - b.weekday));
+    renderPlan();
+    planForm.reset();
+    showMessage(planMessage, `تمت إضافة البند إلى ${WEEK_NAMES[weekday]}.`, true);
+  });
+
+  weekPlan.addEventListener("click", async (event) => {
+    const add = event.target.closest(".week-add");
+    if (add) {
+      planDayInput.value = add.closest(".week-day").dataset.weekday;
+      planTitleInput.focus();
+      return;
+    }
+    const remove = event.target.closest(".plan-remove");
+    if (!remove) return;
+    const item = remove.closest(".plan-item");
+    const { error } = await supabaseClient.from("plan_items").delete().eq("id", item.dataset.id).eq("user_id", currentUser.id);
+    if (error) {
+      showMessage(planMessage, `تعذّر حذف البند. ${friendlyDbError(error)}`);
+      console.error(error);
+      return;
+    }
+    planItems = planItems.filter((entry) => entry.id !== item.dataset.id);
+    renderPlan();
+    showMessage(planMessage, "تم حذف البند من خطتك.", true);
+  });
+
+  // ===== التقويم الشهري =====
+  function minutesForDate(key) {
+    return sessions.filter((session) => session.study_date === key).reduce((sum, session) => sum + session.duration, 0);
+  }
+
+  function renderCalendar() {
+    const year = calCursor.getFullYear();
+    const month = calCursor.getMonth();
+    calLabel.textContent = new Intl.DateTimeFormat("ar-SA", { month: "long", year: "numeric" }).format(calCursor);
+    const first = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = dateKey();
+    const dayNames = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
+    let html = dayNames.map((name) => `<div class="cal-head">${name}</div>`).join("");
+    for (let i = 0; i < first.getDay(); i++) html += '<div class="cal-cell pad"></div>';
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = dateKey(new Date(year, month, day));
+      const minutes = minutesForDate(key);
+      const hasTask = tasks.some((task) => task.due_date === key);
+      const heat = minutes === 0 ? "" : minutes < 30 ? " heat-1" : minutes < 90 ? " heat-2" : " heat-3";
+      html += `<div class="cal-cell${heat}${key === today ? " is-today" : ""}" title="${minutes ? `${arabicNumber(minutes)} دقيقة دراسة` : ""}">
+        <span class="cal-daynum">${arabicNumber(day)}</span>
+        <span class="cal-mins">${minutes ? `${arabicNumber(minutes)} د` : ""}</span>
+        ${hasTask ? '<span class="cal-task-dot" aria-label="يوم فيه مهام"></span>' : ""}
+      </div>`;
+    }
+    calendarElement.innerHTML = html;
+  }
+
+  calPrev.addEventListener("click", () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1);
+    renderCalendar();
+  });
+  calNext.addEventListener("click", () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1);
+    renderCalendar();
+  });
+  // ===== التنقل بين الأقسام =====
+  document.querySelectorAll(".section-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      currentSection = tab.dataset.section;
+      document.querySelectorAll(".section-tab").forEach((other) => {
+        const active = other === tab;
+        other.classList.toggle("is-active", active);
+        other.setAttribute("aria-selected", String(active));
+      });
+      document.querySelectorAll(".section-view").forEach((view) => {
+        view.classList.toggle("hidden", view.id !== `${currentSection}-section`);
+      });
+      if (currentSection === "planner") renderCalendar();
+    });
+  });
+
   document.querySelectorAll(".view-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       currentView = tab.dataset.view;
@@ -501,6 +774,10 @@
   studyDateInput.value = dateKey();
   studyDateInput.max = dateKey();
 
+  // معالجة أخطاء روابط التأكيد/الاستعادة (#error=... بدل صمتٍ مربك).
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const urlErrorCode = hashParams.get("error_code") || hashParams.get("error");
+
   const config = window.STUDY_TRACKER_CONFIG || {};
   const configured = config.supabaseUrl && config.publishableKey && !config.supabaseUrl.includes("ضع-") && !config.publishableKey.includes("ضع-");
   if (!configured || !window.supabase?.createClient) {
@@ -510,6 +787,9 @@
     document.querySelector("#auth-forgot").disabled = true;
   } else {
     supabaseClient = window.supabase.createClient(config.supabaseUrl, config.publishableKey);
+    if (urlErrorCode && !/type=recovery/.test(window.location.hash)) {
+      showMessage(authMessage, describeUrlError(urlErrorCode));
+    }
     supabaseClient.auth.getSession().then(({ data, error }) => {
       if (error) console.error(error);
       const user = data?.session?.user;

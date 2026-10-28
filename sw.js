@@ -1,6 +1,6 @@
 // عامل الخدمة: يخزّن ملفات التطبيق للعمل دون اتصال.
 // ملاحظة: عند تغيير أي ملف، ارفع رقم CACHE في الأسفل لتفريغ النسخة القديمة.
-const CACHE = "study-tracker-v1";
+const CACHE = "ijtima-nuqat-v2";
 
 const SHELL = [
   "./",
@@ -14,7 +14,11 @@ const SHELL = [
   "./icons/apple-touch-icon.png",
 ];
 
-const CDN_PREFIXES = ["https://cdn.jsdelivr.net/npm/@supabase/supabase-js"];
+const CDN_PREFIXES = [
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js",
+  "https://fonts.googleapis.com/",
+  "https://fonts.gstatic.com/",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
