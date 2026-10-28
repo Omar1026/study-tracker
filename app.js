@@ -770,6 +770,86 @@
     if (document.visibilityState === "visible" && currentUser) loadSessions(true);
   });
 
+  // ===== زر تثبيت التطبيق (PWA) =====
+  const installButton = document.querySelector("#install-button");
+  const installModal = document.querySelector("#install-modal");
+  const installClose = document.querySelector("#install-close");
+  const installNow = document.querySelector("#install-now");
+  const installSteps = document.querySelector("#install-steps");
+  let deferredInstallPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    installButton.classList.add("can-install");
+  });
+
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    installButton.classList.remove("can-install");
+    installModal.classList.add("hidden");
+  });
+
+  function detectPlatform() {
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+    if (/Android/i.test(ua)) return "android";
+    return "desktop";
+  }
+
+  const INSTALL_STEPS = {
+    android: [
+      "افتح الموقع في متصفح <b>Chrome</b>.",
+      "اضغط قائمة <b>⋮</b> في الأعلى.",
+      "اختر <b>«تثبيت التطبيق»</b>.",
+      "اضغط <b>تثبيت</b> — ستظهر أيقونة «ن» في تطبيقاتك.",
+    ],
+    ios: [
+      "افتح الموقع في متصفح <b>Safari</b> (لا يمكن من Chrome).",
+      "اضغط زر <b>المشاركة 📤</b> في الشريط السفلي.",
+      "اختر <b>«إضافة إلى الشاشة الرئيسية»</b>.",
+      "اضغط <b>«إضافة»</b> في الأعلى.",
+    ],
+    desktop: [
+      "افتح الموقع في <b>Chrome</b> أو <b>Edge</b>.",
+      "اضغط أيقونة <b>التثبيت ⤓</b> في شريط العنوان.",
+      "أو افتح القائمة <b>⋮</b> واختر <b>«تثبيت اجتماع النقط»</b>.",
+      "ستفتح له نافذة مستقلة مع أيقونة في قائمة ابدأ.",
+    ],
+  };
+
+  function openInstallModal() {
+    installSteps.innerHTML = INSTALL_STEPS[detectPlatform()]
+      .map((step) => `<li>${step}</li>`).join("");
+    installNow.classList.toggle("hidden", !deferredInstallPrompt);
+    installModal.classList.remove("hidden");
+    installClose.focus();
+  }
+
+  function closeInstallModal() {
+    installModal.classList.add("hidden");
+  }
+
+  installButton.addEventListener("click", openInstallModal);
+  installClose.addEventListener("click", closeInstallModal);
+  installModal.addEventListener("click", (event) => {
+    if (event.target === installModal) closeInstallModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !installModal.classList.contains("hidden")) closeInstallModal();
+  });
+
+  installNow.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    installNow.disabled = true;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installNow.disabled = false;
+    installButton.classList.remove("can-install");
+    closeInstallModal();
+  });
+
   document.querySelector("#today-label").textContent = new Intl.DateTimeFormat("ar-SA", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
   studyDateInput.value = dateKey();
   studyDateInput.max = dateKey();

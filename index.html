@@ -18,7 +18,11 @@
   <main class="page-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="اجتماع النقط - الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">ن</span><span>اجتماع النقط</span></a>
-      <div class="topbar-actions"><span class="today-label" id="today-label"></span><button class="button button-quiet hidden" id="sign-out" type="button">تسجيل الخروج</button></div>
+      <div class="topbar-actions">
+        <button class="button button-quiet install-button" id="install-button" type="button"><span aria-hidden="true">⬇</span> تثبيت التطبيق</button>
+        <span class="today-label" id="today-label"></span>
+        <button class="button button-quiet hidden" id="sign-out" type="button">تسجيل الخروج</button>
+      </div>
     </header>
 
     <section class="intro" aria-labelledby="page-title">
@@ -135,6 +139,16 @@
           <div class="calendar" id="calendar"></div>
           <p class="calendar-legend"><span class="legend-swatch heat-1"></span> خفيف <span class="legend-swatch heat-2"></span> متوسط <span class="legend-swatch heat-3"></span> مكثّف <span class="legend-dot"></span> يوم فيه مهام</p>
         </section>
+      </div>
+    </div>
+    <div class="install-modal hidden" id="install-modal" role="dialog" aria-modal="true" aria-labelledby="install-heading">
+      <div class="install-card">
+        <button class="modal-close" id="install-close" type="button" aria-label="إغلاق">×</button>
+        <span class="install-icon" aria-hidden="true">ن</span>
+        <h2 id="install-heading">تثبيت «اجتماع النقط»</h2>
+        <p class="install-intro">اتبع الخطوات حسب جهازك ليعمل التطبيق بملء الشاشة ودون اتصال:</p>
+        <ol class="install-steps" id="install-steps"></ol>
+        <button class="button button-primary hidden" id="install-now" type="button">تثبيت الآن <span aria-hidden="true">⬇</span></button>
       </div>
     </div>
     <footer>كل دقيقة تركيز تصنع فرقًا <span aria-hidden="true">✦</span></footer>
