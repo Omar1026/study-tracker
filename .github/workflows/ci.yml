@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: فحص صياغة JavaScript
+        run: node --check app.js && node --check sw.js && node --check supabase-config.js
+      - name: فحص صحة HTML
+        run: npx --yes htmlhint@1.1.4 index.html
