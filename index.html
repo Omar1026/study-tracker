@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0e5c54">
+  <meta name="theme-color" content="#0e5c54" id="theme-color-meta">
   <meta name="description" content="اجتماع النقط: سجّل جلسات دراستك، نظّم مهامك وخطة أسبوعك، وتابع تقدّمك من أي جهاز.">
   <title>اجتماع النقط — رفيقك في رحلة العلم</title>
   <link rel="manifest" href="manifest.json">
@@ -11,22 +11,22 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="page-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="اجتماع النقط - الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">ن</span><span>اجتماع النقط</span></a>
+      <a class="brand" href="#home" data-page="home" aria-label="اجتماع النقط - الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">ن</span><span>اجتماع النقط</span></a>
       <div class="topbar-actions">
-        <button class="button button-quiet install-button" id="install-button" type="button"><span aria-hidden="true">⬇</span> تثبيت التطبيق</button>
-        <span class="today-label" id="today-label"></span>
+        <button class="button button-quiet install-button hidden" id="install-button" type="button" aria-label="تثبيت التطبيق"><span aria-hidden="true">⬇</span> تثبيت التطبيق</button>
+        <time class="today-label" id="today-label"></time>
         <button class="button button-quiet hidden" id="sign-out" type="button">تسجيل الخروج</button>
       </div>
     </header>
 
     <section class="intro" aria-labelledby="page-title">
-      <p class="eyebrow">خطوة صغيرة كل يوم</p><h1 id="page-title">اجمع النقط… يتكوّن السليل.</h1>
+      <p class="eyebrow">خطوة صغيرة كل يوم</p><h1 id="page-title">جلساتك... لها أثرٌ يبقى ✨</h1>
       <p class="intro-copy">سجّل جلساتك، ونظّم مهامك وخطتك، وتابع تقدّمك الدراسي من أي جهاز.</p>
     </section>
 
@@ -37,44 +37,75 @@
       <span class="poem-corner poem-corner-bl" aria-hidden="true"></span>
       <p class="poem-verse"><span>اليوم شيءٌ وغدًا مثلُه</span><i aria-hidden="true">✦</i><span>من نُخب العلمِ التي تُلتقطْ</span></p>
       <p class="poem-verse"><span>يُحصِّل المَرء بها حكمةً</span><i aria-hidden="true">✦</i><span>وإنما السيلُ اجتماع النقطْ</span></p>
-      <p class="poem-caption">كل جلسة نقطة… والسيل اجتماع النقط</p>
+      <p class="poem-caption">لا تحقرن صغيرةً <span aria-hidden="true">*</span> إن الجبال من الحصى</p>
     </section>
     <section class="panel auth-panel" id="auth-panel" aria-labelledby="auth-heading">
       <div class="panel-heading"><div><p class="eyebrow">حسابك الدراسي</p><h2 id="auth-heading">تسجيل الدخول</h2></div><span class="heading-icon" aria-hidden="true">↗</span></div>
       <p class="auth-description" id="auth-description">سجّل الدخول لمتابعة جلساتك المحفوظة في حسابك.</p>
       <form id="auth-form" novalidate>
         <label for="auth-email">البريد الإلكتروني</label><input id="auth-email" type="email" autocomplete="email" required placeholder="name@example.com">
-        <label for="auth-password">كلمة المرور</label><input id="auth-password" type="password" autocomplete="current-password" minlength="8" required placeholder="٨ أحرف على الأقل">
+        <label for="auth-password">كلمة المرور</label><div class="password-control"><input id="auth-password" type="password" autocomplete="current-password" minlength="8" required placeholder="٨ أحرف على الأقل"><button class="password-toggle" type="button" data-password-toggle aria-controls="auth-password" aria-pressed="false" aria-label="إظهار كلمة المرور">إظهار</button></div>
+        <div class="auth-confirm-row hidden" id="auth-confirm-row"><label for="auth-confirm">تأكيد كلمة المرور</label><div class="password-control"><input id="auth-confirm" type="password" autocomplete="new-password" minlength="8" disabled><button class="password-toggle" type="button" data-password-toggle aria-controls="auth-confirm" aria-pressed="false" aria-label="إظهار كلمة المرور">إظهار</button></div></div>
         <p class="form-message" id="auth-message" role="status" aria-live="polite"></p>
         <button class="button button-primary" type="submit" id="auth-submit">دخول <span aria-hidden="true">←</span></button>
       </form>
       <p class="auth-switch" id="auth-switch-row">ليس لديك حساب؟ <button class="text-action" type="button" id="auth-switch">إنشاء حساب جديد</button></p>
       <p class="auth-forgot-row" id="forgot-row"><button class="text-action" type="button" id="auth-forgot">نسيت كلمة المرور؟</button></p>
+      <details class="how-to-card">
+        <summary>ما فكرة التطبيق؟ وكيف أستخدمه؟</summary>
+        <div class="how-to-content">
+          <p>«اجتماع النقط» يساعدك على تسجيل وقت المذاكرة وتنظيم مهامك وخطتك الأسبوعية، ثم متابعة إنجازك اليومي والأسبوعي.</p>
+          <ol><li>أنشئ حسابًا أو سجّل الدخول لحفظ بياناتك.</li><li>أضف جلسة بعد المذاكرة أو استخدم المؤقت، وسجّل المادة والمدة وملاحظة اختيارية.</li><li>رتّب مهامك وخطة أسبوعك من قسمي «مهامي» و«التخطيط».</li><li>تابع وقتك وأهدافك وإحصاءاتك، وعدّل جلساتك أو صدّرها عند الحاجة.</li></ol>
+        </div>
+      </details>
+      <button class="button button-quiet demo-open" id="demo-open" type="button">استكشف التطبيق ببيانات تجريبية <span aria-hidden="true">←</span></button>
       <p class="setup-note hidden" id="setup-note">أضف رابط مشروع Supabase ومفتاحه العام في ملف <strong>supabase-config.js</strong> لتفعيل تسجيل الدخول.</p>
+    </section>
+
+    <section class="demo-area hidden" id="demo-area" aria-labelledby="demo-heading">
+      <div class="demo-notice"><strong>معاينة للقراءة فقط</strong><span>هذه بيانات وهمية للتوضيح؛ لا تُحفظ ولا تُرسل إلى أي مكان.</span></div>
+      <div class="panel-heading demo-title"><div><p class="eyebrow">نموذج توضيحي</p><h2 id="demo-heading">هكذا تبدو لوحة الدراسة</h2></div><button class="button button-quiet" id="demo-close" type="button">العودة لتسجيل الدخول</button></div>
+      <section class="demo-stats" aria-label="إحصاءات تجريبية">
+        <article class="demo-card"><span>وقت الدراسة اليوم</span><strong>١ ساعة و٣٥ دقيقة</strong><small>جلستان تجريبيتان</small></article>
+        <article class="demo-card"><span>الهدف اليومي</span><strong>٧٩٪</strong><small>من هدف ١٢٠ دقيقة</small></article>
+        <article class="demo-card"><span>مهام قيد الإنجاز</span><strong>٣ مهام</strong><small>مهمة واحدة أُنجزت</small></article>
+      </section>
+      <section class="panel demo-panel"><div class="panel-heading"><div><p class="eyebrow">مثال على السجل</p><h3>جلسات الدراسة</h3></div></div>
+        <ul class="demo-list"><li><span><strong>الرياضيات</strong><small>مراجعة المعادلات</small></span><b>٥٠ دقيقة</b></li><li><span><strong>الأحياء</strong><small>تلخيص الفصل الثاني</small></span><b>٤٥ دقيقة</b></li></ul>
+      </section>
+      <div class="demo-columns"><section class="panel demo-panel"><p class="eyebrow">مثال على التنظيم</p><h3>مهام قادمة</h3><ul class="demo-simple-list"><li>حل مسائل الفصل الثالث</li><li>مراجعة مفردات اللغة الإنجليزية</li><li>تسليم الملخص</li></ul></section>
+        <section class="panel demo-panel"><p class="eyebrow">مثال على التخطيط</p><h3>خطة الأسبوع</h3><ul class="demo-simple-list"><li>الأحد · رياضيات · ٥:٠٠ م</li><li>الثلاثاء · أحياء · ٦:٣٠ م</li><li>الخميس · مراجعة عامة</li></ul></section></div>
     </section>
 
     <section class="panel auth-panel hidden" id="recovery-panel" aria-labelledby="recovery-heading">
       <div class="panel-heading"><div><p class="eyebrow">حسابك الدراسي</p><h2 id="recovery-heading">تعيين كلمة مرور جديدة</h2></div><span class="heading-icon" aria-hidden="true">↺</span></div>
       <p class="auth-description">اختر كلمة مرور جديدة لحسابك، ثم ستنتقل مباشرة إلى جلساتك.</p>
       <form id="recovery-form" novalidate>
-        <label for="recovery-password">كلمة المرور الجديدة</label><input id="recovery-password" type="password" autocomplete="new-password" minlength="8" required placeholder="٨ أحرف على الأقل">
-        <label for="recovery-confirm">تأكيد كلمة المرور</label><input id="recovery-confirm" type="password" autocomplete="new-password" minlength="8" required placeholder="أعد كتابة كلمة المرور">
+        <label for="recovery-password">كلمة المرور الجديدة</label><div class="password-control"><input id="recovery-password" type="password" autocomplete="new-password" minlength="8" required placeholder="٨ أحرف على الأقل"><button class="password-toggle" type="button" data-password-toggle aria-controls="recovery-password" aria-pressed="false" aria-label="إظهار كلمة المرور">إظهار</button></div>
+        <label for="recovery-confirm">تأكيد كلمة المرور</label><div class="password-control"><input id="recovery-confirm" type="password" autocomplete="new-password" minlength="8" required placeholder="أعد كتابة كلمة المرور"><button class="password-toggle" type="button" data-password-toggle aria-controls="recovery-confirm" aria-pressed="false" aria-label="إظهار كلمة المرور">إظهار</button></div>
         <p class="form-message" id="recovery-message" role="status" aria-live="polite"></p>
         <button class="button button-primary" type="submit" id="recovery-submit">حفظ كلمة المرور <span aria-hidden="true">←</span></button>
       </form>
     </section>
     <div id="student-area" class="hidden">
-      <section class="stats" aria-label="إحصاءات الدراسة اليوم">
-        <article class="stat-card stat-primary"><span class="stat-icon" aria-hidden="true">◷</span><div class="stat-body"><p class="stat-label">وقت الدراسة اليوم</p><p class="stat-value"><span id="today-hours">٠</span> <small>ساعة</small></p><p class="stat-detail" id="today-minutes">٠ دقيقة إجمالًا</p><div class="goal-progress" aria-hidden="true"><div class="goal-progress-fill" id="goal-progress-fill"></div></div><p class="stat-detail" id="goal-progress-text"></p></div></article>
-        <article class="stat-card"><span class="stat-icon soft" aria-hidden="true">▤</span><div class="stat-body"><p class="stat-label">جلسات اليوم</p><p class="stat-value"><span id="today-count">٠</span> <small>جلسة</small></p><p class="stat-detail">كل جلسة تقرّبك من هدفك</p></div></article>
-        <article class="stat-card goal-card"><span class="stat-icon soft" aria-hidden="true">◎</span><div class="stat-body"><p class="stat-label">الهدف اليومي</p><div class="goal-row"><input id="goal-input" type="number" min="5" max="1440" step="5" value="120" aria-label="الهدف اليومي بالدقائق"><span class="goal-unit">دقيقة</span><button class="button button-quiet" type="button" id="goal-save">حفظ</button></div><p class="form-message" id="goal-message" role="status" aria-live="polite"></p></div></article>
-      </section>
-      <p class="form-message cloud-message" id="cloud-message" role="status" aria-live="polite"></p>
-      <nav class="section-tabs" role="tablist" aria-label="أقسام التطبيق">
-        <button class="section-tab is-active" type="button" data-section="sessions" role="tab" aria-selected="true"><span aria-hidden="true">◷</span> جلساتي</button>
-        <button class="section-tab" type="button" data-section="tasks" role="tab" aria-selected="false"><span aria-hidden="true">☑</span> مهامي</button>
-        <button class="section-tab" type="button" data-section="planner" role="tab" aria-selected="false"><span aria-hidden="true">▦</span> التخطيط</button>
+      <nav class="section-tabs main-navigation" aria-label="التنقل الرئيسي">
+        <button class="section-tab is-active" type="button" data-page="home" aria-current="page"><span aria-hidden="true">⌂</span> الرئيسية</button>
+        <button class="section-tab" type="button" data-page="sessions"><span aria-hidden="true">◷</span> الجلسات</button>
+        <button class="section-tab" type="button" data-page="tasks"><span aria-hidden="true">☑</span> المهام</button>
+        <button class="section-tab" type="button" data-page="planner"><span aria-hidden="true">▦</span> التخطيط</button>
+        <button class="section-tab" type="button" data-page="settings"><span aria-hidden="true">⚙</span> الإعدادات</button>
       </nav>
+      <div class="app-page" id="home-page">
+        <section class="stats" aria-label="إحصاءات الدراسة اليوم">
+          <article class="stat-card stat-primary"><span class="stat-icon" aria-hidden="true">◷</span><div class="stat-body"><p class="stat-label">وقت الدراسة اليوم</p><p class="stat-value"><span id="today-hours">٠</span> <small>ساعة</small></p><p class="stat-detail" id="today-minutes">٠ دقيقة إجمالًا</p><div class="goal-progress" aria-hidden="true"><div class="goal-progress-fill" id="goal-progress-fill"></div></div><p class="stat-detail" id="goal-progress-text"></p></div></article>
+          <article class="stat-card"><span class="stat-icon soft" aria-hidden="true">▤</span><div class="stat-body"><p class="stat-label">جلسات اليوم</p><p class="stat-value"><span id="today-count">٠</span> <small>جلسة</small></p><p class="stat-detail">كل جلسة تقرّبك من هدفك</p></div></article>
+          <article class="stat-card goal-card"><span class="stat-icon soft" aria-hidden="true">◎</span><div class="stat-body"><p class="stat-label">الهدف اليومي</p><div class="goal-row"><input id="goal-input" type="number" min="5" max="1440" step="5" value="120" aria-label="الهدف اليومي بالدقائق"><span class="goal-unit">دقيقة</span><button class="button button-quiet" type="button" id="goal-save">حفظ</button></div><p class="form-message" id="goal-message" role="status" aria-live="polite"></p></div></article>
+        </section>
+        <p class="form-message cloud-message" id="cloud-message" role="status" aria-live="polite"></p>
+        <section class="panel home-welcome"><p class="eyebrow">لوحة يومك</p><h2>أهلًا بك في مساحة إنجازك</h2><p>اختر قسمًا للبدء، وسجّل تقدمك خطوة بخطوة.</p><div class="home-shortcuts"><button type="button" data-page="sessions"><span aria-hidden="true">◷</span><strong>سجّل جلسة</strong><small>أضف وقت مذاكرتك</small></button><button type="button" data-page="tasks"><span aria-hidden="true">☑</span><strong>رتّب مهامك</strong><small>تابع ما تريد إنجازه</small></button><button type="button" data-page="planner"><span aria-hidden="true">▦</span><strong>خطط لأسبوعك</strong><small>نظّم وقت الدراسة</small></button></div></section>
+        <section class="panel chart-panel" aria-labelledby="chart-heading"><div class="panel-heading"><div><p class="eyebrow">نشاطك الأسبوعي</p><h2 id="chart-heading">آخر ٧ أيام</h2></div><span class="count-badge" id="chart-total">٠ دقيقة</span></div><div class="chart" id="chart" role="img" aria-label="مخطط دقائق الدراسة خلال آخر سبعة أيام"></div></section>
+      </div>
+      <div class="app-page hidden" id="sessions-page">
       <div class="section-view" id="sessions-section">
         <div class="content-grid">
           <section class="panel form-panel" aria-labelledby="form-heading">
@@ -102,12 +133,10 @@
             <div class="empty-state" id="empty-state"><span class="empty-icon" aria-hidden="true">✳</span><h3 id="empty-title">مساحتك جاهزة لأول إنجاز</h3><p id="empty-hint">أضف جلسة دراستك الأولى، وستظهر هنا.</p></div>
           </section>
         </div>
-        <section class="panel chart-panel" aria-labelledby="chart-heading">
-          <div class="panel-heading"><div><p class="eyebrow">نشاطك الأسبوعي</p><h2 id="chart-heading">آخر ٧ أيام</h2></div><span class="count-badge" id="chart-total">٠ دقيقة</span></div>
-          <div class="chart" id="chart" role="img" aria-label="مخطط دقائق الدراسة خلال آخر سبعة أيام"></div>
-        </section>
       </div>
-      <div class="section-view hidden" id="tasks-section">
+      </div>
+      <div class="app-page hidden" id="tasks-page">
+      <div class="section-view" id="tasks-section">
         <section class="panel" aria-labelledby="tasks-heading">
           <div class="panel-heading"><div><p class="eyebrow">ما أنوي إنجازه</p><h2 id="tasks-heading">مهامي</h2></div><div class="heading-tools"><span class="count-badge" id="task-badge">٠ مهام</span></div></div>
           <form id="task-form" class="task-form" novalidate>
@@ -120,7 +149,9 @@
           <div class="empty-state hidden" id="task-empty"><span class="empty-icon" aria-hidden="true">☑</span><h3>لا توجد مهام بعد</h3><p>أضف مهامك الصغيرة، فتحقيقها نقطة في سيل إنجازك.</p></div>
         </section>
       </div>
-      <div class="section-view hidden" id="planner-section">
+      </div>
+      <div class="app-page hidden" id="planner-page">
+      <div class="section-view" id="planner-section">
         <section class="panel" aria-labelledby="plan-heading">
           <div class="panel-heading"><div><p class="eyebrow">جدولك الأسبوعي</p><h2 id="plan-heading">خطة الأسبوع</h2></div><span class="heading-icon" aria-hidden="true">▦</span></div>
           <form id="plan-form" class="task-form" novalidate>
@@ -140,6 +171,19 @@
           <p class="calendar-legend"><span class="legend-swatch heat-1"></span> خفيف <span class="legend-swatch heat-2"></span> متوسط <span class="legend-swatch heat-3"></span> مكثّف <span class="legend-dot"></span> يوم فيه مهام</p>
         </section>
       </div>
+      </div>
+      <div class="app-page hidden" id="settings-page">
+        <section class="panel settings-panel" aria-labelledby="settings-heading">
+          <div class="panel-heading"><div><p class="eyebrow">خصص تجربتك</p><h2 id="settings-heading">إعدادات المظهر</h2></div><span class="heading-icon" aria-hidden="true">⚙</span></div>
+          <fieldset class="setting-group"><legend>لون التطبيق</legend><p class="setting-help">اختر لونًا صافيًا يميز الأزرار والعناصر الرئيسية.</p><div class="color-options">
+            <button class="color-swatch" type="button" data-accent="teal" aria-label="أخضر تركوازي" title="أخضر تركوازي"></button><button class="color-swatch" type="button" data-accent="blue" aria-label="أزرق" title="أزرق"></button><button class="color-swatch" type="button" data-accent="purple" aria-label="بنفسجي" title="بنفسجي"></button><button class="color-swatch" type="button" data-accent="green" aria-label="أخضر" title="أخضر"></button><button class="color-swatch" type="button" data-accent="red" aria-label="أحمر" title="أحمر"></button><button class="color-swatch" type="button" data-accent="orange" aria-label="برتقالي" title="برتقالي"></button>
+          </div></fieldset>
+          <div class="setting-row"><div><label for="font-select">نوع الخط العربي</label><p class="setting-help">يُحفظ اختيارك على هذا الجهاز.</p></div><select id="font-select"><option value="ibm">IBM Plex Arabic</option><option value="cairo">القاهرة — Cairo</option><option value="tajawal">تجوال — Tajawal</option><option value="noto-sans">Noto Sans Arabic</option><option value="noto-naskh">Noto Naskh Arabic</option><option value="system">خط الجهاز الافتراضي</option></select></div>
+          <div class="setting-row"><div><strong>حجم الخط</strong><p class="setting-help">كبّر النص أو صغّره بما يناسبك.</p></div><div class="font-size-control"><button class="button button-quiet" type="button" id="font-decrease" aria-label="تصغير الخط">أ−</button><output id="font-size-value" aria-live="polite">متوسط</output><button class="button button-quiet" type="button" id="font-increase" aria-label="تكبير الخط">أ+</button></div></div>
+          <div class="setting-row"><div><label for="theme-select">المظهر</label><p class="setting-help">اختر الوضع النهاري أو الليلي.</p></div><select id="theme-select"><option value="day">نهاري</option><option value="night">ليلي</option></select></div>
+          <p class="form-message settings-message" id="settings-message" role="status" aria-live="polite">تُحفظ تفضيلات المظهر تلقائيًا على هذا الجهاز.</p>
+        </section>
+      </div>
     </div>
     <div class="install-modal hidden" id="install-modal" role="dialog" aria-modal="true" aria-labelledby="install-heading">
       <div class="install-card">
@@ -151,7 +195,7 @@
         <button class="button button-primary hidden" id="install-now" type="button">تثبيت الآن <span aria-hidden="true">⬇</span></button>
       </div>
     </div>
-    <footer>كل دقيقة تركيز تصنع فرقًا <span aria-hidden="true">✦</span></footer>
+    <footer><p>كل دقيقة تركيز تصنع فرقًا <span aria-hidden="true">✦</span></p><p class="footer-credit">تطوير: أبو عمر الأثري · <a href="mailto:alathry18@gmail.com">alathry18@gmail.com</a> · <a href="https://github.com/Omar1026/study-tracker/issues/new" target="_blank" rel="noopener noreferrer">أرسل ملاحظة أو اقتراحًا</a></p></footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js" integrity="sha384-UagCvVPT5XXA0Hx+nJYUAGBFseHT9zBgpJMSebsAxl9lciTwbT+39j5VfRjdP5Tp" crossorigin="anonymous"></script>
   <script src="supabase-config.js"></script>

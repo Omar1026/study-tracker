@@ -12,12 +12,23 @@
   const emptyTitle = document.querySelector("#empty-title");
   const emptyHint = document.querySelector("#empty-hint");
   const authForm = document.querySelector("#auth-form");
+  const authEmailInput = document.querySelector("#auth-email");
+  const authPasswordInput = document.querySelector("#auth-password");
+  const authConfirmRow = document.querySelector("#auth-confirm-row");
+  const authConfirmInput = document.querySelector("#auth-confirm");
   const authMessage = document.querySelector("#auth-message");
   const authPanel = document.querySelector("#auth-panel");
   const recoveryPanel = document.querySelector("#recovery-panel");
   const recoveryForm = document.querySelector("#recovery-form");
   const recoveryMessage = document.querySelector("#recovery-message");
   const studentArea = document.querySelector("#student-area");
+  const demoArea = document.querySelector("#demo-area");
+  const demoOpenButton = document.querySelector("#demo-open");
+  const demoCloseButton = document.querySelector("#demo-close");
+  const fontSelect = document.querySelector("#font-select");
+  const themeSelect = document.querySelector("#theme-select");
+  const fontSizeValue = document.querySelector("#font-size-value");
+  const settingsMessage = document.querySelector("#settings-message");
   const signOutButton = document.querySelector("#sign-out");
   const cloudMessage = document.querySelector("#cloud-message");
   const sessionBadge = document.querySelector("#session-badge");
@@ -59,7 +70,7 @@
   let isSignUp = false;
   let dailyGoal = 120;
   let currentView = "today";
-  let currentSection = "sessions";
+  let currentPage = "home";
   let timerStart = null;
   let timerInterval = null;
   let calCursor = new Date();
@@ -73,6 +84,24 @@
     week: ["لا توجد جلسات في آخر ٧ أيام", "أضف جلسة جديدة أو استعرض جلسات الشهر."],
     month: ["لا توجد جلسات هذا الشهر", "ابدأ اليوم وستجد ملخصك هنا."],
   };
+  const PALETTES = {
+    teal: { main: "#0e5c54", soft: "#e4f0ec", night: "#57c5b8" },
+    blue: { main: "#2459a6", soft: "#e5edf8", night: "#87b5ff" },
+    purple: { main: "#7040a0", soft: "#eee7f5", night: "#c8a0f2" },
+    green: { main: "#267343", soft: "#e6f1e9", night: "#80d99a" },
+    red: { main: "#c43b3b", soft: "#f7e8e8", night: "#ff8d8d" },
+    orange: { main: "#b7610b", soft: "#f7ecdf", night: "#ffc078" },
+  };
+  const ARABIC_FONTS = {
+    ibm: '"IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif',
+    cairo: '"Cairo", Tahoma, sans-serif',
+    tajawal: '"Tajawal", Tahoma, sans-serif',
+    "noto-sans": '"Noto Sans Arabic", Tahoma, sans-serif',
+    "noto-naskh": '"Noto Naskh Arabic", "Traditional Arabic", serif',
+    system: 'system-ui, "Segoe UI", Tahoma, sans-serif',
+  };
+  const FONT_SCALES = [0.9, 1, 1.1, 1.2];
+  let appearance = { accent: "teal", font: "ibm", fontScale: 1, theme: "day" };
 
   const pad2 = (value) => String(value).padStart(2, "0");
   const toArabicDigits = (value) => pad2(value).replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
@@ -90,6 +119,28 @@
   const arabicNumber = (value) => new Intl.NumberFormat("ar-SA").format(value);
   const weekdayShort = (date) => new Intl.DateTimeFormat("ar-SA", { weekday: "short" }).format(date);
   const dateShort = (key) => new Intl.DateTimeFormat("ar-SA", { day: "numeric", month: "short" }).format(new Date(`${key}T00:00:00`));
+  function updateTodayLabel() {
+    const now = new Date();
+    const gregorianDate = new Intl.DateTimeFormat("ar-SA", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    }).format(now);
+    let hijriDate;
+    try {
+      hijriDate = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+        day: "numeric", month: "long", year: "numeric",
+      }).format(now);
+    } catch (error) {
+      hijriDate = new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
+        day: "numeric", month: "long", year: "numeric",
+      }).format(now);
+    }
+    const currentTime = new Intl.DateTimeFormat("ar-SA", {
+      hour: "numeric", minute: "2-digit", hour12: true,
+    }).format(now);
+    const label = document.querySelector("#today-label");
+    label.textContent = `الميلادي: ${gregorianDate} · الهجري: ${hijriDate} · الوقت: ${currentTime}`;
+    label.dateTime = now.toISOString();
+  }
   const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   const timeLabel = (value) => {
     if (!value) return "";
@@ -104,6 +155,78 @@
     element.classList.toggle("success", success);
   }
 
+  function loadAppearance() {
+    try {
+      const saved = JSON.parse(localStorage.getItem("study-tracker-appearance") || "{}");
+      appearance = {
+        accent: PALETTES[saved.accent] ? saved.accent : "teal",
+        font: ARABIC_FONTS[saved.font] ? saved.font : "ibm",
+        fontScale: FONT_SCALES.includes(saved.fontScale) ? saved.fontScale : 1,
+        theme: saved.theme === "night" ? "night" : "day",
+      };
+    } catch (error) {
+      console.warn("تعذر قراءة تفضيلات المظهر المحفوظة.", error);
+    }
+  }
+
+  function applyAppearance() {
+    const palette = PALETTES[appearance.accent] || PALETTES.teal;
+    const root = document.documentElement;
+    root.style.setProperty("--teal", palette.main);
+    root.style.setProperty("--teal-dark", appearance.theme === "night" ? palette.night : palette.main);
+    root.style.setProperty("--teal-soft", palette.soft);
+    root.style.setProperty("--font-ui", ARABIC_FONTS[appearance.font] || ARABIC_FONTS.ibm);
+    root.style.setProperty("--root-font-size", (16 * appearance.fontScale) + "px");
+    document.body.dataset.theme = appearance.theme;
+    document.body.classList.add("solid-colors");
+    document.querySelector("#theme-color-meta").content = appearance.theme === "night" ? "#111b17" : palette.main;
+    fontSelect.value = appearance.font;
+    themeSelect.value = appearance.theme;
+    document.querySelectorAll(".color-swatch").forEach((swatch) => {
+      swatch.setAttribute("aria-pressed", String(swatch.dataset.accent === appearance.accent));
+    });
+    const scaleIndex = FONT_SCALES.indexOf(appearance.fontScale);
+    fontSizeValue.textContent = ["صغير", "متوسط", "كبير", "كبير جدًا"][scaleIndex] || "متوسط";
+    document.querySelector("#font-decrease").disabled = scaleIndex === 0;
+    document.querySelector("#font-increase").disabled = scaleIndex === FONT_SCALES.length - 1;
+  }
+
+  function saveAppearance() {
+    applyAppearance();
+    try {
+      localStorage.setItem("study-tracker-appearance", JSON.stringify(appearance));
+      showMessage(settingsMessage, "تم حفظ تفضيلات المظهر على هذا الجهاز.", true);
+    } catch (error) {
+      showMessage(settingsMessage, "تعذر حفظ التفضيلات في هذا المتصفح.");
+      console.error(error);
+    }
+  }
+
+  function navigateToPage(page, updateHistory = true) {
+    const validPages = ["home", "sessions", "tasks", "planner", "settings"];
+    if (!validPages.includes(page)) page = "home";
+    const pageTitles = { home: "الرئيسية", sessions: "الجلسات", tasks: "المهام", planner: "التخطيط", settings: "الإعدادات" };
+    currentPage = page;
+    document.title = pageTitles[page] + " — اجتماع النقط";
+    document.querySelectorAll(".app-page").forEach((view) => {
+      view.classList.toggle("hidden", view.id !== (page + "-page"));
+    });
+    document.querySelectorAll(".main-navigation [data-page]").forEach((button) => {
+      const active = button.dataset.page === page;
+      button.classList.toggle("is-active", active);
+      if (active) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
+    if (page === "planner") renderCalendar();
+    if (updateHistory && window.location.hash !== ("#" + page)) {
+      try {
+        window.history.pushState({ page }, "", "#" + page);
+      } catch (error) {
+        window.location.hash = page;
+      }
+    }
+  }
+
   // ترجمة رسائل أخطاء المصادقة الشائعة إلى عربية واضحة.
   function friendlyAuthError(error) {
     const raw = error?.message || "";
@@ -111,7 +234,7 @@
       ["Invalid login credentials", "البريد الإلكتروني أو كلمة المرور غير صحيحة."],
       ["Email not confirmed", "الرجاء تأكيد بريدك الإلكتروني أولًا عبر الرسالة التي وصلك."],
       ["User already registered", "هذا البريد مسجّل بالفعل. سجّل الدخول أو استعد كلمة المرور."],
-      ["Password should be at least", "كلمة المرور يجب ألا تقل عن ٦ أحرف."],
+      ["Password should be at least", "كلمة المرور يجب ألا تقل عن ٨ أحرف."],
       ["should be different", "كلمة المرور الجديدة يجب أن تختلف عن السابقة."],
       ["could not be found", "لا يوجد حساب بهذا البريد، أو انتهت صلاحية الرابط."],
       ["no user", "لا يوجد حساب بهذا البريد، أو انتهت صلاحية الرابط."],
@@ -151,7 +274,11 @@
     document.querySelector("#auth-submit").innerHTML = signUp ? 'إنشاء الحساب <span aria-hidden="true">←</span>' : 'دخول <span aria-hidden="true">←</span>';
     document.querySelector("#auth-switch-row").firstChild.textContent = signUp ? "لديك حساب بالفعل؟ " : "ليس لديك حساب؟ ";
     document.querySelector("#auth-switch").textContent = signUp ? "تسجيل الدخول" : "إنشاء حساب جديد";
-    document.querySelector("#auth-password").autocomplete = signUp ? "new-password" : "current-password";
+    authPasswordInput.autocomplete = signUp ? "new-password" : "current-password";
+    authConfirmRow.classList.toggle("hidden", !signUp);
+    authConfirmInput.disabled = !signUp;
+    authConfirmInput.required = signUp;
+    authConfirmInput.value = "";
     document.querySelector("#forgot-row").classList.toggle("hidden", signUp);
     showMessage(authMessage, "");
   }
@@ -258,9 +385,13 @@
   }
   async function handleAuth(event) {
     event.preventDefault();
-    const email = document.querySelector("#auth-email").value.trim();
-    const password = document.querySelector("#auth-password").value;
+    const email = authEmailInput.value.trim();
+    const password = authPasswordInput.value;
     const submit = document.querySelector("#auth-submit");
+    if (!email) return showMessage(authMessage, "اكتب بريدك الإلكتروني أولًا.");
+    if (authEmailInput.validity.typeMismatch) return showMessage(authMessage, "تحقق من كتابة البريد الإلكتروني بشكل صحيح.");
+    if (password.length < 8) return showMessage(authMessage, "كلمة المرور يجب ألا تقل عن ٨ أحرف.");
+    if (isSignUp && password !== authConfirmInput.value) return showMessage(authMessage, "كلمتا المرور غير متطابقتين.");
     submit.disabled = true;
     showMessage(authMessage, isSignUp ? "جارٍ إنشاء الحساب..." : "جارٍ تسجيل الدخول...");
     const result = isSignUp
@@ -312,6 +443,7 @@
     const password = document.querySelector("#recovery-password").value;
     const confirm = document.querySelector("#recovery-confirm").value;
     const submit = document.querySelector("#recovery-submit");
+    if (password.length < 8) return showMessage(recoveryMessage, "كلمة المرور يجب ألا تقل عن ٨ أحرف.");
     if (password !== confirm) return showMessage(recoveryMessage, "كلمتا المرور غير متطابقتين.");
     submit.disabled = true;
     showMessage(recoveryMessage, "جارٍ حفظ كلمة المرور الجديدة...");
@@ -349,12 +481,16 @@
 
   async function setUser(user) {
     currentUser = user;
+    demoArea.classList.add("hidden");
+    document.body.classList.add("app-mode");
     dailyGoal = Number(user?.user_metadata?.daily_goal) || DEFAULT_GOAL;
     goalInput.value = dailyGoal;
     authPanel.classList.add("hidden");
     recoveryPanel.classList.add("hidden");
     studentArea.classList.remove("hidden");
     signOutButton.classList.remove("hidden");
+    const hashPage = window.location.hash.slice(1);
+    navigateToPage(hashPage || "home", false);
     await loadSessions();
     await Promise.all([loadTasks(), loadPlan()]);
   }
@@ -374,6 +510,7 @@
     tasks = [];
     planItems = [];
     studentArea.classList.add("hidden");
+    document.body.classList.remove("app-mode");
     signOutButton.classList.add("hidden");
     recoveryPanel.classList.add("hidden");
     authPanel.classList.remove("hidden");
@@ -719,21 +856,12 @@
     calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1);
     renderCalendar();
   });
-  // ===== التنقل بين الأقسام =====
-  document.querySelectorAll(".section-tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      currentSection = tab.dataset.section;
-      document.querySelectorAll(".section-tab").forEach((other) => {
-        const active = other === tab;
-        other.classList.toggle("is-active", active);
-        other.setAttribute("aria-selected", String(active));
-      });
-      document.querySelectorAll(".section-view").forEach((view) => {
-        view.classList.toggle("hidden", view.id !== `${currentSection}-section`);
-      });
-      if (currentSection === "planner") renderCalendar();
-    });
+  // ===== التنقل بين صفحات التطبيق =====
+  document.querySelectorAll("[data-page]").forEach((button) => {
+    button.addEventListener("click", () => navigateToPage(button.dataset.page));
   });
+  window.addEventListener("popstate", () => navigateToPage(window.location.hash.slice(1), false));
+  window.addEventListener("hashchange", () => navigateToPage(window.location.hash.slice(1), false));
 
   document.querySelectorAll(".view-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -748,7 +876,58 @@
   });
 
   cancelButton.addEventListener("click", () => { resetForm(); showMessage(message, ""); });
+  document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const input = document.getElementById(button.getAttribute("aria-controls"));
+      const visible = input.type === "password";
+      input.type = visible ? "text" : "password";
+      button.textContent = visible ? "إخفاء" : "إظهار";
+      button.setAttribute("aria-pressed", String(visible));
+      button.setAttribute("aria-label", `${visible ? "إخفاء" : "إظهار"} كلمة المرور`);
+    });
+  });
   document.querySelector("#auth-switch").addEventListener("click", () => setAuthMode(!isSignUp));
+  document.querySelectorAll(".color-swatch").forEach((swatch) => {
+    swatch.addEventListener("click", () => {
+      appearance.accent = swatch.dataset.accent;
+      saveAppearance();
+    });
+  });
+  fontSelect.addEventListener("change", () => {
+    appearance.font = fontSelect.value;
+    saveAppearance();
+  });
+  themeSelect.addEventListener("change", () => {
+    appearance.theme = themeSelect.value;
+    saveAppearance();
+  });
+  document.querySelector("#font-decrease").addEventListener("click", () => {
+    const index = FONT_SCALES.indexOf(appearance.fontScale);
+    if (index > 0) {
+      appearance.fontScale = FONT_SCALES[index - 1];
+      saveAppearance();
+    }
+  });
+  document.querySelector("#font-increase").addEventListener("click", () => {
+    const index = FONT_SCALES.indexOf(appearance.fontScale);
+    if (index < FONT_SCALES.length - 1) {
+      appearance.fontScale = FONT_SCALES[index + 1];
+      saveAppearance();
+    }
+  });
+  loadAppearance();
+  applyAppearance();
+  demoOpenButton.addEventListener("click", () => {
+    authPanel.classList.add("hidden");
+    recoveryPanel.classList.add("hidden");
+    demoArea.classList.remove("hidden");
+    demoArea.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  demoCloseButton.addEventListener("click", () => {
+    demoArea.classList.add("hidden");
+    authPanel.classList.remove("hidden");
+    authPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
   document.querySelector("#auth-forgot").addEventListener("click", handleForgotPassword);
   authForm.addEventListener("submit", handleAuth);
   recoveryForm.addEventListener("submit", handleRecovery);
@@ -778,16 +957,45 @@
   const installSteps = document.querySelector("#install-steps");
   let deferredInstallPrompt = null;
 
+  const isInstalledApp = () => window.matchMedia?.("(display-mode: standalone)")?.matches === true
+    || navigator.standalone === true;
+  let installCompleted = isInstalledApp();
+  try {
+    installCompleted = installCompleted || localStorage.getItem("study-tracker-installed") === "true";
+  } catch (error) {
+    console.warn("تعذر قراءة حالة التثبيت المحفوظة.", error);
+  }
+  if (installCompleted) {
+    installButton.classList.add("hidden");
+    if (isInstalledApp()) {
+      try {
+        localStorage.setItem("study-tracker-installed", "true");
+      } catch (error) {
+        console.warn("تعذر حفظ حالة التثبيت.", error);
+      }
+    }
+  }
+  else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) installButton.classList.remove("hidden");
+
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
+    if (installCompleted) return;
     deferredInstallPrompt = event;
+    installButton.classList.remove("hidden");
     installButton.classList.add("can-install");
   });
 
   window.addEventListener("appinstalled", () => {
+    installCompleted = true;
     deferredInstallPrompt = null;
+    installButton.classList.add("hidden");
     installButton.classList.remove("can-install");
     installModal.classList.add("hidden");
+    try {
+      localStorage.setItem("study-tracker-installed", "true");
+    } catch (error) {
+      console.warn("تعذر حفظ حالة التثبيت.", error);
+    }
   });
 
   function detectPlatform() {
@@ -842,15 +1050,26 @@
   installNow.addEventListener("click", async () => {
     if (!deferredInstallPrompt) return;
     installNow.disabled = true;
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
+    const installPrompt = deferredInstallPrompt;
+    installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice?.outcome === "accepted") {
+      installCompleted = true;
+      installButton.classList.add("hidden");
+      try {
+        localStorage.setItem("study-tracker-installed", "true");
+      } catch (error) {
+        console.warn("تعذر حفظ حالة التثبيت.", error);
+      }
+    }
     deferredInstallPrompt = null;
     installNow.disabled = false;
     installButton.classList.remove("can-install");
     closeInstallModal();
   });
 
-  document.querySelector("#today-label").textContent = new Intl.DateTimeFormat("ar-SA", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
+  updateTodayLabel();
+  window.setInterval(updateTodayLabel, 60_000);
   studyDateInput.value = dateKey();
   studyDateInput.max = dateKey();
 
