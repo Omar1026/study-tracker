@@ -79,10 +79,15 @@ create table if not exists public.plan_items (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   title text not null check (char_length(trim(title)) between 1 and 120),
-  weekday smallint not null check (weekday between 1 and 7),
+  weekday smallint not null,
   start_time time,
   created_at timestamptz not null default now()
 );
+
+-- قيم الواجهة: الأحد 0 إلى السبت 6. يُبقي التعديل السجلات الحالية كما هي ويتيح يوم الأحد.
+alter table public.plan_items drop constraint if exists plan_items_weekday_check;
+alter table public.plan_items
+  add constraint plan_items_weekday_check check (weekday between 0 and 6);
 
 create index if not exists plan_items_user_weekday_idx
 on public.plan_items (user_id, weekday, created_at);

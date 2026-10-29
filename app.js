@@ -39,6 +39,10 @@
   const goalMessage = document.querySelector("#goal-message");
   const timerDisplay = document.querySelector("#timer-display");
   const timerToggle = document.querySelector("#timer-toggle");
+  const timerAccept = document.querySelector("#timer-accept");
+  const timerReset = document.querySelector("#timer-reset");
+  const sessionSearch = document.querySelector("#session-search");
+  const exportAccountDataButton = document.querySelector("#export-account-data");
 
   // المهام
   const taskForm = document.querySelector("#task-form");
@@ -72,6 +76,7 @@
   let currentView = "today";
   let currentPage = "home";
   let timerStart = null;
+  let timerElapsedMs = 0;
   let timerInterval = null;
   let calCursor = new Date();
 
@@ -89,8 +94,11 @@
     blue: { main: "#2459a6", soft: "#e5edf8", night: "#87b5ff" },
     purple: { main: "#7040a0", soft: "#eee7f5", night: "#c8a0f2" },
     green: { main: "#267343", soft: "#e6f1e9", night: "#80d99a" },
-    red: { main: "#c43b3b", soft: "#f7e8e8", night: "#ff8d8d" },
+    gold: { main: "#916400", soft: "#fff2cc", night: "#ffd166" },
     orange: { main: "#b7610b", soft: "#f7ecdf", night: "#ffc078" },
+    indigo: { main: "#4338a8", soft: "#ecebff", night: "#aaa5ff" },
+    sky: { main: "#076b8c", soft: "#e2f4f8", night: "#70d4ed" },
+    rose: { main: "#a23b72", soft: "#fae8f1", night: "#f09ac3" },
   };
   const ARABIC_FONTS = {
     ibm: '"IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif',
@@ -310,6 +318,16 @@
     document.querySelector("#goal-progress-text").textContent = totalMinutes >= dailyGoal
       ? "أحسنت! حققت هدف اليوم ✦"
       : `حققت ${arabicNumber(percent)}٪ من هدف ${arabicNumber(dailyGoal)} دقيقة`;
+    const studiedDays = new Set(sessions.map((session) => session.study_date));
+    let streakCursor = new Date();
+    if (!studiedDays.has(dateKey(streakCursor))) streakCursor = addDays(streakCursor, -1);
+    let streak = 0;
+    while (studiedDays.has(dateKey(streakCursor))) {
+      streak += 1;
+      streakCursor = addDays(streakCursor, -1);
+    }
+    document.querySelector("#study-streak").textContent = arabicNumber(streak);
+    document.querySelector("#study-streak-hint").textContent = streak ? "تقدّم جميل، واصل بإيقاع يناسبك." : "ابدأ بخطوة اليوم، والراحة جزء من الطريق.";
   }
 
   function renderChart() {
@@ -333,9 +351,27 @@
     }).join("");
   }
 
+  function renderMonthSummary() {
+    const today = new Date();
+    const start = dateKey(new Date(today.getFullYear(), today.getMonth(), 1));
+    const monthSessions = sessions.filter((session) => session.study_date >= start && session.study_date <= dateKey(today));
+    const minutes = monthSessions.reduce((sum, session) => sum + Number(session.duration || 0), 0);
+    const studyDays = new Set(monthSessions.map((session) => session.study_date)).size;
+    const subjectTotals = new Map();
+    monthSessions.forEach((session) => subjectTotals.set(session.subject, (subjectTotals.get(session.subject) || 0) + Number(session.duration || 0)));
+    const topSubject = [...subjectTotals.entries()].sort((a, b) => b[1] - a[1])[0];
+    document.querySelector("#month-minutes").textContent = `${arabicNumber(minutes)} دقيقة`;
+    document.querySelector("#month-days").textContent = `${arabicNumber(studyDays)} ${studyDays === 1 ? "يوم" : "أيام"}`;
+    document.querySelector("#month-top-subject").textContent = topSubject ? `${topSubject[0]} · ${arabicNumber(topSubject[1])} د` : "—";
+    document.querySelector("#month-report-hint").textContent = monthSessions.length
+      ? `سجّلت ${arabicNumber(monthSessions.length)} جلسة هذا الشهر. استمر بوتيرتك المناسبة.`
+      : "ابدأ بتسجيل جلساتك ليظهر ملخص الشهر.";
+  }
+
   function renderList() {
     const today = dateKey();
-    const items = viewSessions();
+    const query = sessionSearch.value.trim().toLocaleLowerCase("ar");
+    const items = viewSessions().filter((session) => !query || `${session.subject} ${session.note || ""}`.toLocaleLowerCase("ar").includes(query));
     sessionBadge.textContent = `${arabicNumber(items.length)} جلسات`;
     sessionList.innerHTML = items.map((session) => {
       const timeLabelValue = session.study_date === today
@@ -350,7 +386,7 @@
       </article>`;
     }).join("");
     emptyState.classList.toggle("hidden", items.length > 0);
-    const [title, hint] = EMPTY_TEXT[currentView];
+    const [title, hint] = query ? ["لا توجد نتائج مطابقة", "جرّب كلمة أخرى أو امسح البحث لعرض الجلسات."] : EMPTY_TEXT[currentView];
     emptyTitle.textContent = title;
     emptyHint.textContent = hint;
   }
@@ -359,18 +395,16 @@
     renderStats();
     renderList();
     renderChart();
+    renderMonthSummary();
   }
 
   async function loadSessions(silent = false) {
     if (!silent) showMessage(cloudMessage, "جارٍ تحميل جلساتك...");
-    const { start } = viewRange("week");
-    const monthStart = dateKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-    const from = start < monthStart ? start : monthStart;
     const { data, error } = await supabaseClient
       .from("study_sessions")
       .select("id, subject, duration, note, study_date, created_at")
       .eq("user_id", currentUser.id)
-      .gte("study_date", from)
+      .gte("study_date", dateKey(addDays(new Date(), -364)))
       .lte("study_date", dateKey())
       .order("study_date", { ascending: false })
       .order("created_at", { ascending: false });
@@ -544,31 +578,84 @@
     showMessage(cloudMessage, `تم تصدير ${arabicNumber(items.length)} جلسة إلى ملف CSV.`, true);
   }
 
+  async function exportAccountData() {
+    if (!currentUser || !supabaseClient) return;
+    exportAccountDataButton.disabled = true;
+    showMessage(settingsMessage, "جارٍ تجهيز نسخة بياناتك...");
+    const exportedSessions = [];
+    const pageSize = 500;
+    let offset = 0;
+    try {
+      while (true) {
+        const { data, error } = await supabaseClient
+          .from("study_sessions")
+          .select("id, subject, duration, note, study_date, created_at")
+          .eq("user_id", currentUser.id)
+          .order("created_at", { ascending: true })
+          .order("id", { ascending: true })
+          .range(offset, offset + pageSize - 1);
+        if (error) throw error;
+        exportedSessions.push(...(data || []));
+        if (!data || data.length < pageSize) break;
+        offset += pageSize;
+      }
+      const backup = {
+        format: "study-tracker-backup-v1",
+        exportedAt: new Date().toISOString(),
+        account: { email: currentUser.email || null },
+        dailyGoalMinutes: dailyGoal,
+        sessions: exportedSessions,
+        tasks: tasks.map(({ id, title, due_date, done, created_at }) => ({ id, title, due_date, done, created_at })),
+        weeklyPlan: planItems.map(({ id, title, weekday, start_time, created_at }) => ({ id, title, weekday, start_time, created_at })),
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `study-tracker-backup-${dateKey()}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showMessage(settingsMessage, "تم تنزيل نسخة بياناتك على هذا الجهاز.", true);
+    } catch (error) {
+      console.error(error);
+      showMessage(settingsMessage, `تعذّر تجهيز النسخة. ${friendlyDbError(error)}`);
+    } finally {
+      exportAccountDataButton.disabled = false;
+    }
+  }
+
   function stopTimer() {
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = null;
-    const elapsedMs = timerStart ? Date.now() - timerStart : 0;
+    const elapsedMs = timerElapsedMs + (timerStart ? Date.now() - timerStart : 0);
     timerStart = null;
+    timerElapsedMs = 0;
     timerDisplay.textContent = "٠٠:٠٠:٠٠";
     timerToggle.textContent = "ابدأ المؤقت";
     timerToggle.classList.remove("is-running");
+    timerAccept.disabled = true;
+    timerReset.disabled = true;
     return elapsedMs;
   }
 
   function toggleTimer() {
     if (timerStart) {
-      const elapsedMs = stopTimer();
-      const minutes = Math.max(1, Math.round(elapsedMs / 60000));
-      durationInput.value = minutes;
-      showMessage(message, `تمت إدخال مدة المؤقت (${arabicNumber(minutes)} دقيقة) في حقل المدة.`, true);
-      subjectInput.focus();
+      timerElapsedMs += Date.now() - timerStart;
+      timerStart = null;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerToggle.textContent = "استئناف المؤقت";
+      timerToggle.classList.remove("is-running");
+      showMessage(message, "أُوقف المؤقت مؤقتًا. يمكنك استئنافه أو اعتماد مدته.", true);
       return;
     }
     timerStart = Date.now();
-    timerToggle.textContent = "إيقاف المؤقت";
+    timerToggle.textContent = "إيقاف مؤقت";
     timerToggle.classList.add("is-running");
+    timerAccept.disabled = false;
+    timerReset.disabled = false;
     const tick = () => {
-      const totalSeconds = Math.floor((Date.now() - timerStart) / 1000);
+      const totalSeconds = Math.floor((timerElapsedMs + Date.now() - timerStart) / 1000);
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor(totalSeconds / 60) % 60;
       const seconds = totalSeconds % 60;
@@ -577,6 +664,19 @@
     tick();
     timerInterval = setInterval(tick, 1000);
   }
+  timerAccept.addEventListener("click", () => {
+    const elapsedMs = stopTimer();
+    if (!elapsedMs) return showMessage(message, "ابدأ المؤقت قبل اعتماد مدته.");
+    const minutes = Math.max(1, Math.round(elapsedMs / 60000));
+    durationInput.value = minutes;
+    showMessage(message, `أُضيفت مدة المؤقت (${arabicNumber(minutes)} دقيقة) إلى حقل المدة. احفظ الجلسة لإضافتها إلى سجلك.`, true);
+    subjectInput.focus();
+  });
+  timerReset.addEventListener("click", () => {
+    if (!window.confirm("هل تريد تصفير المؤقت وإلغاء مدته؟")) return;
+    stopTimer();
+    showMessage(message, "تم تصفير المؤقت.", true);
+  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const subject = subjectInput.value.trim();
@@ -874,6 +974,7 @@
       renderList();
     });
   });
+  sessionSearch.addEventListener("input", renderList);
 
   cancelButton.addEventListener("click", () => { resetForm(); showMessage(message, ""); });
   document.querySelectorAll("[data-password-toggle]").forEach((button) => {
@@ -933,6 +1034,7 @@
   recoveryForm.addEventListener("submit", handleRecovery);
   goalSaveButton.addEventListener("click", saveGoal);
   timerToggle.addEventListener("click", toggleTimer);
+  exportAccountDataButton.addEventListener("click", exportAccountData);
   document.querySelector("#export-csv").addEventListener("click", exportCsv);
   signOutButton.addEventListener("click", async () => {
     const { error } = await supabaseClient.auth.signOut();
