@@ -52,6 +52,19 @@
   const privacyModal = document.querySelector("#privacy-modal");
   const privacyClose = document.querySelector("#privacy-close");
 
+  // شاشة الترحيب
+  const onboardingModal = document.querySelector("#onboarding-modal");
+  const onboardingClose = document.querySelector("#onboarding-close");
+  const onboardingPrev = document.querySelector("#onboarding-prev");
+  const onboardingNext = document.querySelector("#onboarding-next");
+  const onboardingSkip = document.querySelector("#onboarding-skip");
+  const onboardingPages = document.querySelectorAll(".onboarding-page");
+  const onboardingSteps = document.querySelectorAll(".step");
+  const quickTodayMinutes = document.querySelector("#quick-today-minutes");
+  const quickTodayHint = document.querySelector("#quick-today-hint");
+
+  let onboardingIndex = 0;
+
   // المهام
   const taskForm = document.querySelector("#task-form");
   const taskTitleInput = document.querySelector("#task-title");
@@ -234,6 +247,16 @@
       else button.removeAttribute("aria-current");
     });
     if (page === "planner") renderCalendar();
+
+    // إعادة تشغيل رسوم الدخول عند العودة للرئيسية
+    if (page === "home") {
+      document.querySelectorAll(".animate-in, .home-hero, .poem-card, .home-grid, .home-quick").forEach((el) => {
+        el.classList.remove("animate-in");
+        void el.offsetHeight; // إعادةfluss
+        el.classList.add("animate-in");
+      });
+    }
+
     if (updateHistory && window.location.hash !== ("#" + page)) {
       try {
         window.history.pushState({ page }, "", "#" + page);
@@ -336,6 +359,16 @@
     }
     document.querySelector("#study-streak").textContent = arabicNumber(streak);
     document.querySelector("#study-streak-hint").textContent = streak ? "تقدّم جميل، واصل بإيقاع يناسبك." : "ابدأ بخطوة اليوم، والراحة جزء من الطريق.";
+
+    // الملخص السريع في الصفحة الرئيسية
+    if (quickTodayMinutes) {
+      quickTodayMinutes.textContent = totalMinutes > 0
+        ? `${arabicNumber(totalMinutes)} دقيقة`
+        : "٠ دقيقة";
+      quickTodayHint.textContent = totalMinutes > 0
+        ? `حققت ${arabicNumber(Math.min(100, Math.round((totalMinutes / dailyGoal) * 100)))}٪ من هدفك اليومي.`
+        : "ابدأ جلستك الأولى لتظهر هنا.";
+    }
   }
 
   function renderChart() {
@@ -1068,6 +1101,62 @@
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !privacyModal.classList.contains("hidden")) privacyModal.classList.add("hidden");
   });
+
+  // ===== شاشة الترحيب (Onboarding) =====
+  function showOnboardingPage(index) {
+    onboardingIndex = Math.max(0, Math.min(index, onboardingPages.length - 1));
+    onboardingPages.forEach((page, i) => {
+      page.classList.toggle("active", i === onboardingIndex);
+    });
+    onboardingSteps.forEach((step, i) => {
+      step.classList.toggle("active", i === onboardingIndex);
+    });
+    onboardingPrev.classList.toggle("hidden", onboardingIndex === 0);
+    const isLast = onboardingIndex === onboardingPages.length - 1;
+    onboardingNext.innerHTML = isLast
+      ? 'ابدأ الاستخدام <span aria-hidden="true">→</span>'
+      : 'التالي <span aria-hidden="true">→</span>';
+    onboardingSkip.classList.toggle("hidden", isLast);
+  }
+
+  function finishOnboarding() {
+    try {
+      localStorage.setItem("study-tracker-onboarded", "true");
+    } catch (error) {
+      console.warn("تعذر حفظ حالة الترحيب.", error);
+    }
+    onboardingModal.classList.add("hidden");
+  }
+
+  onboardingClose.addEventListener("click", finishOnboarding);
+  onboardingSkip.addEventListener("click", finishOnboarding);
+  onboardingNext.addEventListener("click", () => {
+    if (onboardingIndex === onboardingPages.length - 1) {
+      finishOnboarding();
+    } else {
+      showOnboardingPage(onboardingIndex + 1);
+    }
+  });
+  onboardingPrev.addEventListener("click", () => {
+    showOnboardingPage(onboardingIndex - 1);
+  });
+  onboardingModal.addEventListener("click", (event) => {
+    if (event.target === onboardingModal) finishOnboarding();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !onboardingModal.classList.contains("hidden")) finishOnboarding();
+  });
+
+  // عرض شاشة الترحيب عند الزيار.first
+  try {
+    const alreadyOnboarded = localStorage.getItem("study-tracker-onboarded") === "true";
+    if (!alreadyOnboarded) {
+      onboardingModal.classList.remove("hidden");
+      showOnboardingPage(0);
+    }
+  } catch (error) {
+    console.warn("تعذر قراءة حالة الترحيب.", error);
+  }
   signOutButton.addEventListener("click", async () => {
     const { error } = await supabaseClient.auth.signOut();
     if (error) {

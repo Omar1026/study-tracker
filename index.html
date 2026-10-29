@@ -115,7 +115,7 @@
 
         <section class="home-grid" aria-label="الأقسام الرئيسية">
           <button type="button" class="home-card" data-page="sessions" aria-label="سجل جلسة دراسة جديدة">
-            <span class="card-icon">◷</span>
+            <span class="card-icon icon-study">📖</span>
             <div class="card-body">
               <h3>سجلات الدراسة</h3>
               <p>سجّل وقت مذاكرتك، المادة، المدة والملاحظات لكل جلسة.</p>
@@ -123,7 +123,7 @@
             <span class="card-arrow">→</span>
           </button>
           <button type="button" class="home-card" data-page="tasks" aria-label="إدارة المهام اليومية">
-            <span class="card-icon">☑</span>
+            <span class="card-icon icon-tasks">✅</span>
             <div class="card-body">
               <h3>مهامي</h3>
               <p>أضف المهام التي تريد إنجازها وتابع حالتها أولًا بأول.</p>
@@ -131,13 +131,24 @@
             <span class="card-arrow">→</span>
           </button>
           <button type="button" class="home-card" data-page="planner" aria-label="التخطيط الأسبوعي">
-            <span class="card-icon">▦</span>
+            <span class="card-icon icon-plan">📅</span>
             <div class="card-body">
               <h3>خطة الأسبوع</h3>
               <p>نظّم وقت دراستك على أيام الأسبوع وحدد موعدًا لكل مادة.</p>
             </div>
             <span class="card-arrow">→</span>
           </button>
+        </section>
+
+        <section class="home-quick" aria-label="ملخص سريع ليومك">
+          <div class="quick-card">
+            <span class="quick-icon">◷</span>
+            <div class="quick-body">
+              <p class="quick-label">درست اليوم</p>
+              <p class="quick-value" id="quick-today-minutes">٠ دقيقة</p>
+              <p class="quick-hint" id="quick-today-hint">ابدأ جلستك الأولى لتظهر هنا.</p>
+            </div>
+          </div>
         </section>
 
         <p class="form-message cloud-message" id="cloud-message" role="status" aria-live="polite"></p>
@@ -238,6 +249,37 @@
         <p class="install-intro">اتبع الخطوات حسب جهازك ليعمل التطبيق بملء الشاشة ودون اتصال:</p>
         <ol class="install-steps" id="install-steps"></ol>
         <button class="button button-primary hidden" id="install-now" type="button">تثبيت الآن <span aria-hidden="true">⬇</span></button>
+      </div>
+    </div>
+    <div class="onboarding-modal hidden" id="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-heading">
+      <div class="onboarding-card">
+        <button class="onboarding-close" id="onboarding-close" type="button" aria-label="تخطي">×</button>
+        <div class="onboarding-progress" id="onboarding-progress">
+          <span class="step active"></span><span class="step"></span><span class="step"></span>
+        </div>
+        <h2 id="onboarding-heading">مرحبًا بك في «اجتماع النقط»</h2>
+        <div class="onboarding-pages">
+          <div class="onboarding-page active">
+            <div class="onboarding-icon">🎯</div>
+            <h3>سجّل تقدمك الدراسي</h3>
+            <p>أضف جلسات دراستك يوميًا مع المادة والمدة والملاحظة، وراقب تقدمك لحظة بلحظة.</p>
+          </div>
+          <div class="onboarding-page">
+            <div class="onboarding-icon">✅</div>
+            <h3>نظّم مهامك</h3>
+            <p>أنشئ قائمة بالمهام التي تريد إنجازها، وحّدّد مواعيد استحقاقها، وضع إشارة عند الإنجاز.</p>
+          </div>
+          <div class="onboarding-page">
+            <div class="onboarding-icon">📅</div>
+            <h3>خطط لأسبوعك</h3>
+            <p>وزّع دراستك على أيام الأسبوع وحدد موعدًا لكل مادة في خطة أسبوعية مرنة.</p>
+          </div>
+        </div>
+        <div class="onboarding-actions">
+          <button class="button button-quiet hidden" id="onboarding-prev" type="button">السابق</button>
+          <button class="button button-primary" id="onboarding-next" type="button">التالي <span aria-hidden="true">→</span></button>
+        </div>
+        <p class="onboarding-skip" id="onboarding-skip">تخطي الآن</p>
       </div>
     </div>
     <div class="privacy-modal hidden" id="privacy-modal" role="dialog" aria-modal="true" aria-labelledby="privacy-heading">
