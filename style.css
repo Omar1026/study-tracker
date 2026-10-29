@@ -517,6 +517,181 @@ footer span { color: var(--gold); }
   .week-grid { grid-template-columns: 1fr; }
 }
 
+/* ===== الصفحة الرئيسية الجديدة: Hero + أيقونات ثلاثية ===== */
+.home-hero {
+  text-align: center;
+  padding: 46px 0 14px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.home-hero .eyebrow {
+  color: var(--gold);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+.home-hero h1 {
+  font-size: clamp(2rem, 6vw, 3.25rem);
+  margin: 0 0 12px;
+  color: var(--teal-dark);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+.home-subtitle {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* شبكة الأيقونات الثلاثية */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 26px 0 10px;
+}
+.home-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 26px 28px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  text-align: right;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.home-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--teal);
+  box-shadow: 0 14px 38px rgba(14, 92, 84, 0.14);
+}
+.home-card:active { transform: translateY(-1px); }
+.home-card .card-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.home-card .card-body { min-width: 0; text-align: right; }
+.home-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  color: var(--teal-dark);
+  font-weight: 800;
+}
+.home-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.home-card .card-arrow {
+  font-size: 1.35rem;
+  color: var(--muted);
+  flex: 0 0 auto;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.home-card:hover .card-arrow {
+  transform: translateX(-5px);
+  color: var(--teal);
+}
+
+/* إعدادات التثبيت مرة واحدة وبيان الخصوصية */
+.settings-install { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+.install-once-btn {
+  width: 100%;
+  justify-content: center;
+  background: var(--teal);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(14, 92, 84, 0.25);
+}
+.install-once-btn:hover { box-shadow: 0 10px 26px rgba(14, 92, 84, 0.34); }
+.install-once-btn:disabled { background: var(--muted); color: rgba(255,255,255,0.7); box-shadow: none; }
+.privacy-btn {
+  width: 100%;
+  justify-content: center;
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  background: var(--teal-soft);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+.privacy-btn:hover { background: var(--teal); color: #fff; }
+
+/* نافذة بيان الخصوصية (مودال) */
+.privacy-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(10, 40, 36, 0.5);
+  backdrop-filter: blur(5px);
+}
+.privacy-modal.hidden { display: none !important; }
+.privacy-card {
+  width: min(720px, 94%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 30px 28px;
+  box-shadow: 0 30px 90px rgba(10, 40, 36, 0.38);
+  position: relative;
+}
+.privacy-close {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+}
+.privacy-close:hover { color: var(--rose); }
+.privacy-card h2 {
+  margin: 0 0 16px;
+  font-size: 1.4rem;
+  color: var(--teal-dark);
+  line-height: 1.35;
+}
+.privacy-card p { margin: 0 0 10px; line-height: 1.8; }
+.privacy-card ul { margin: 8px 0 14px; padding-inline-start: 22px; }
+.privacy-card li { margin-top: 8px; line-height: 1.8; }
+.privacy-card a { color: var(--teal); text-decoration: underline; }
+.privacy-card a:hover { text-decoration: none; }
+
+/* شريط العلوي: تنسيق أزرار الإعدادات والوضع الليلي */
+#theme-toggle, #settings-top {
+  font-size: 1.2rem;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+#theme-toggle:hover, #settings-top:hover { background: var(--canvas); color: var(--teal); }
+
+@media (max-width: 760px) {
+  .home-grid { grid-template-columns: 1fr; gap: 12px; }
+  .home-card { padding: 20px 22px; gap: 16px; }
+  .home-card .card-icon { font-size: 2rem; }
+  .home-card h3 { font-size: 1.05rem; }
+  .home-hero { padding: 30px 0 10px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }

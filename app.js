@@ -44,6 +44,14 @@
   const sessionSearch = document.querySelector("#session-search");
   const exportAccountDataButton = document.querySelector("#export-account-data");
 
+  // الشريط العلوي
+  const themeToggle = document.querySelector("#theme-toggle");
+  // الإعدادات
+  const installSettingsBtn = document.querySelector("#install-settings-btn");
+  const privacyOpenBtn = document.querySelector("#privacy-open-btn");
+  const privacyModal = document.querySelector("#privacy-modal");
+  const privacyClose = document.querySelector("#privacy-close");
+
   // المهام
   const taskForm = document.querySelector("#task-form");
   const taskTitleInput = document.querySelector("#task-title");
@@ -1018,6 +1026,7 @@
   });
   loadAppearance();
   applyAppearance();
+  themeToggle.textContent = appearance.theme === "night" ? "🌙" : "☀️";
   demoOpenButton.addEventListener("click", () => {
     authPanel.classList.add("hidden");
     recoveryPanel.classList.add("hidden");
@@ -1036,6 +1045,29 @@
   timerToggle.addEventListener("click", toggleTimer);
   exportAccountDataButton.addEventListener("click", exportAccountData);
   document.querySelector("#export-csv").addEventListener("click", exportCsv);
+
+  // التبديل السريع بين الوضع النهاري والليلي من الشريط العلوي
+  themeToggle.addEventListener("click", () => {
+    appearance.theme = appearance.theme === "night" ? "day" : "night";
+    themeSelect.value = appearance.theme;
+    saveAppearance();
+    themeToggle.textContent = appearance.theme === "night" ? "🌙" : "☀️";
+  });
+
+  // فتح وإغلاق نافذة بيان الخصوصية
+  privacyOpenBtn.addEventListener("click", () => {
+    privacyModal.classList.remove("hidden");
+    privacyClose.focus();
+  });
+  privacyClose.addEventListener("click", () => {
+    privacyModal.classList.add("hidden");
+  });
+  privacyModal.addEventListener("click", (event) => {
+    if (event.target === privacyModal) privacyModal.classList.add("hidden");
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !privacyModal.classList.contains("hidden")) privacyModal.classList.add("hidden");
+  });
   signOutButton.addEventListener("click", async () => {
     const { error } = await supabaseClient.auth.signOut();
     if (error) {
@@ -1052,7 +1084,7 @@
   });
 
   // ===== زر تثبيت التطبيق (PWA) =====
-  const installButton = document.querySelector("#install-button");
+  const installButton = document.querySelector("#install-settings-btn");
   const installModal = document.querySelector("#install-modal");
   const installClose = document.querySelector("#install-close");
   const installNow = document.querySelector("#install-now");
