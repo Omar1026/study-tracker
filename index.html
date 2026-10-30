@@ -97,13 +97,13 @@
         <button class="section-tab" type="button" data-page="settings"><span aria-hidden="true">⚙</span> الإعدادات</button>
       </nav>
       <div class="app-page" id="home-page">
-        <section class="home-hero" aria-labelledby="home-title">
+        <section class="home-hero animate-in" aria-labelledby="home-title">
           <p class="eyebrow">نظام متكامل لمتابعة دراستك</p>
           <h1 id="home-title">اجتماع النقط</h1>
           <p class="home-subtitle">سجّل جلسات دراستك، ونظّم مهامك، وخطط لأسبوعك، وتابع تقدّمك خطوة بخطوة.</p>
         </section>
 
-        <section class="poem-card" aria-label="بيت من الشعر في طلب العلم">
+        <section class="poem-card animate-in" aria-label="بيت من الشعر في طلب العلم">
           <span class="poem-corner poem-corner-tr" aria-hidden="true"></span>
           <span class="poem-corner poem-corner-tl" aria-hidden="true"></span>
           <span class="poem-corner poem-corner-br" aria-hidden="true"></span>
@@ -113,7 +113,7 @@
           <p class="poem-caption">لا تحقرن صغيرةً <span aria-hidden="true">*</span> إن الجبال من الحصى</p>
         </section>
 
-        <section class="home-grid" aria-label="الأقسام الرئيسية">
+        <section class="home-grid animate-in" aria-label="الأقسام الرئيسية">
           <button type="button" class="home-card" data-page="sessions" aria-label="سجل جلسة دراسة جديدة">
             <span class="card-icon icon-study">📖</span>
             <div class="card-body">
@@ -140,7 +140,7 @@
           </button>
         </section>
 
-        <section class="home-quick" aria-label="ملخص سريع ليومك">
+        <section class="home-quick animate-in" aria-label="ملخص سريع ليومك">
           <div class="quick-card">
             <span class="quick-icon">◷</span>
             <div class="quick-body">
@@ -167,7 +167,7 @@
               <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
               <div class="form-actions"><button class="button button-primary" type="submit" id="submit-button">حفظ الجلسة <span aria-hidden="true">←</span></button><button class="button button-quiet hidden" type="button" id="cancel-edit">إلغاء التعديل</button></div>
             </form>
-            <p class="privacy-note"><span aria-hidden="true">♧</span> تُحفظ الجلسات في حسابك. <a href="#privacy-policy">اقرأ بيان الخصوصية</a>.</p>
+            <p class="privacy-note"><span aria-hidden="true">♧</span> تُحفظ الجلسات في حسابك. <button class="text-action" type="button" id="privacy-open-from-form" aria-label="اقرأ بيان الخصوصية">اقرأ بيان الخصوصية</button>.</p>
           </section>
           <section class="panel sessions-panel" aria-labelledby="sessions-heading">
             <div class="panel-heading sessions-heading"><div><p class="eyebrow">إنجازاتك</p><h2 id="sessions-heading">جلساتي</h2></div><div class="heading-tools"><span class="count-badge" id="session-badge">٠ جلسات</span><button class="text-action" type="button" id="export-csv">تصدير CSV</button></div></div>

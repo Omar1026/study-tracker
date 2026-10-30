@@ -53,6 +53,7 @@
   const privacyClose = document.querySelector("#privacy-close");
 
   // شاشة الترحيب
+  const privacyOpenFromForm = document.querySelector("#privacy-open-from-form");
   const onboardingModal = document.querySelector("#onboarding-modal");
   const onboardingClose = document.querySelector("#onboarding-close");
   const onboardingPrev = document.querySelector("#onboarding-prev");
@@ -568,6 +569,17 @@
     navigateToPage(hashPage || "home", false);
     await loadSessions();
     await Promise.all([loadTasks(), loadPlan()]);
+
+    // عرض شاشة الترحيب للمستخدم الجديد بعد تسجيل الدخول
+    try {
+      const alreadyOnboarded = localStorage.getItem("study-tracker-onboarded") === "true";
+      if (!alreadyOnboarded) {
+        onboardingModal.classList.remove("hidden");
+        showOnboardingPage(0);
+      }
+    } catch (error) {
+      console.warn("تعذر قراءة حالة الترحيب.", error);
+    }
   }
 
   function resetForm() {
@@ -1092,6 +1104,10 @@
     privacyModal.classList.remove("hidden");
     privacyClose.focus();
   });
+  privacyOpenFromForm.addEventListener("click", () => {
+    privacyModal.classList.remove("hidden");
+    privacyClose.focus();
+  });
   privacyClose.addEventListener("click", () => {
     privacyModal.classList.add("hidden");
   });
@@ -1147,16 +1163,6 @@
     if (event.key === "Escape" && !onboardingModal.classList.contains("hidden")) finishOnboarding();
   });
 
-  // عرض شاشة الترحيب عند الزيار.first
-  try {
-    const alreadyOnboarded = localStorage.getItem("study-tracker-onboarded") === "true";
-    if (!alreadyOnboarded) {
-      onboardingModal.classList.remove("hidden");
-      showOnboardingPage(0);
-    }
-  } catch (error) {
-    console.warn("تعذر قراءة حالة الترحيب.", error);
-  }
   signOutButton.addEventListener("click", async () => {
     const { error } = await supabaseClient.auth.signOut();
     if (error) {

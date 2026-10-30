@@ -545,14 +545,15 @@ h1, h2, h3 {
 .home-grid { animation: fadeInUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .home-quick { animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
-/* == Miglioramenti: أيقونات البطاقات ثلاثية ملونة ===== */
+/* أيقونات البطاقات ثلاثية ملونة */
 .home-card .card-icon {
   width: 60px;
   height: 60px;
   border-radius: 18px;
   display: grid;
   place-items: center;
-  font-size: 1.9rem;
+  font-size: 2.5rem;
+  line-height: 1;
   flex: 0 0 auto;
   box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
@@ -783,11 +784,6 @@ h1, h2, h3 {
   box-shadow: 0 14px 38px rgba(14, 92, 84, 0.14);
 }
 .home-card:active { transform: translateY(-1px); }
-.home-card .card-icon {
-  font-size: 2.5rem;
-  line-height: 1;
-  flex: 0 0 auto;
-}
 .home-card .card-body { min-width: 0; text-align: right; }
 .home-card h3 {
   margin: 0 0 6px;
@@ -882,26 +878,6 @@ h1, h2, h3 {
 .privacy-card li { margin-top: 8px; line-height: 1.8; }
 .privacy-card a { color: var(--teal); text-decoration: underline; }
 .privacy-card a:hover { text-decoration: none; }
-
-/* شريط العلوي: تنسيق أزرار الإعدادات والوضع الليلي */
-#theme-toggle, #settings-top {
-  font-size: 1.2rem;
-  padding: 8px 10px;
-  border-radius: 10px;
-}
-#theme-toggle:hover, #settings-top:hover { background: var(--canvas); color: var(--teal); }
-
-@media (max-width: 760px) {
-  .home-grid { grid-template-columns: 1fr; gap: 12px; }
-  .home-card { padding: 20px 22px; gap: 16px; }
-  .home-card .card-icon { font-size: 2rem; }
-  .home-card h3 { font-size: 1.05rem; }
-  .home-hero { padding: 30px 0 10px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
-}
 
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 
