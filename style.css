@@ -306,11 +306,12 @@ textarea { resize: vertical; min-height: 79px; }
 #month-report-hint { margin: 12px 0 0; }
 
 /* ===== لوحة الحساب ===== */
-.auth-panel { max-width: 470px; margin: 0 auto 35px; }
+.auth-panel { max-width: 470px; margin: clamp(28px, 10vh, 86px) auto 35px; }
 .auth-description { margin: -12px 0 15px; color: var(--muted); font-size: 0.8125rem; }
 .auth-panel .button-primary { margin-top: 7px; }
 .auth-switch { margin: 17px 0 0; color: var(--muted); font-size: 0.75rem; }
 .auth-forgot-row { margin: 7px 0 0; }
+.auth-privacy-row { margin: 12px 0 0; text-align: center; }
 .setup-note { margin: 13px 0 0; padding: 11px; border-radius: 10px; background: var(--gold-soft); color: #7d6224; font-size: 0.75rem; }
 .cloud-message { margin: 0 0 10px; }
 .how-to-card { margin-top: 20px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--canvas); color: var(--muted); font-size: 0.75rem; }

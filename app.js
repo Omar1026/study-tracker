@@ -22,9 +22,6 @@
   const recoveryForm = document.querySelector("#recovery-form");
   const recoveryMessage = document.querySelector("#recovery-message");
   const studentArea = document.querySelector("#student-area");
-  const demoArea = document.querySelector("#demo-area");
-  const demoOpenButton = document.querySelector("#demo-open");
-  const demoCloseButton = document.querySelector("#demo-close");
   const fontSelect = document.querySelector("#font-select");
   const themeSelect = document.querySelector("#theme-select");
   const fontSizeValue = document.querySelector("#font-size-value");
@@ -46,6 +43,7 @@
 
   // الشريط العلوي
   const themeToggle = document.querySelector("#theme-toggle");
+  const settingsTopButton = document.querySelector("#settings-top");
   // الإعدادات
   const installSettingsBtn = document.querySelector("#install-settings-btn");
   const privacyOpenBtn = document.querySelector("#privacy-open-btn");
@@ -89,6 +87,9 @@
 
   let supabaseClient = null;
   let currentUser = null;
+  let initializedUserId = null;
+  let initializingUserId = null;
+  let initializationPromise = null;
   let sessions = [];
   let tasks = [];
   let planItems = [];
@@ -181,6 +182,7 @@
   };
 
   function showMessage(element, text, success = false) {
+    if (!element) return;
     element.textContent = text;
     element.classList.toggle("success", success);
   }
@@ -270,6 +272,7 @@
   // ترجمة رسائل أخطاء المصادقة الشائعة إلى عربية واضحة.
   function friendlyAuthError(error) {
     const raw = error?.message || "";
+    if (error?.code === "auth_timeout") return "تأخر الاتصال بخدمة تسجيل الدخول. تحقق من الإنترنت وحاول مجددًا.";
     const map = [
       ["Invalid login credentials", "البريد الإلكتروني أو كلمة المرور غير صحيحة."],
       ["Email not confirmed", "الرجاء تأكيد بريدك الإلكتروني أولًا عبر الرسالة التي وصلك."],
@@ -341,15 +344,22 @@
     const today = dateKey();
     const todaySessions = sessions.filter((session) => session.study_date === today);
     const totalMinutes = todaySessions.reduce((sum, session) => sum + session.duration, 0);
-    document.querySelector("#today-hours").textContent = arabicNumber(Math.floor(totalMinutes / 60));
-    document.querySelector("#today-minutes").textContent = `${arabicNumber(totalMinutes)} دقيقة إجمالًا`;
-    document.querySelector("#today-count").textContent = arabicNumber(todaySessions.length);
     const percent = Math.min(100, Math.round((totalMinutes / dailyGoal) * 100));
-    document.querySelector("#goal-progress-fill").style.width = `${totalMinutes > 0 ? Math.max(percent, 3) : 0}%`;
-    document.querySelector("#goal-progress-fill").classList.toggle("goal-met", totalMinutes >= dailyGoal);
-    document.querySelector("#goal-progress-text").textContent = totalMinutes >= dailyGoal
-      ? "أحسنت! حققت هدف اليوم ✦"
-      : `حققت ${arabicNumber(percent)}٪ من هدف ${arabicNumber(dailyGoal)} دقيقة`;
+
+    // عناصر لوحة الإحصاءات (قد لا تكون موجودة في الصفحة الرئيسية المختصرة)
+    const todayHours = document.querySelector("#today-hours");
+    if (todayHours) {
+      todayHours.textContent = arabicNumber(Math.floor(totalMinutes / 60));
+      document.querySelector("#today-minutes").textContent = `${arabicNumber(totalMinutes)} دقيقة إجمالًا`;
+      document.querySelector("#today-count").textContent = arabicNumber(todaySessions.length);
+      const progressFill = document.querySelector("#goal-progress-fill");
+      progressFill.style.width = `${totalMinutes > 0 ? Math.max(percent, 3) : 0}%`;
+      progressFill.classList.toggle("goal-met", totalMinutes >= dailyGoal);
+      document.querySelector("#goal-progress-text").textContent = totalMinutes >= dailyGoal
+        ? "أحسنت! حققت هدف اليوم ✦"
+        : `حققت ${arabicNumber(percent)}٪ من هدف ${arabicNumber(dailyGoal)} دقيقة`;
+    }
+
     const studiedDays = new Set(sessions.map((session) => session.study_date));
     let streakCursor = new Date();
     if (!studiedDays.has(dateKey(streakCursor))) streakCursor = addDays(streakCursor, -1);
@@ -358,21 +368,27 @@
       streak += 1;
       streakCursor = addDays(streakCursor, -1);
     }
-    document.querySelector("#study-streak").textContent = arabicNumber(streak);
-    document.querySelector("#study-streak-hint").textContent = streak ? "تقدّم جميل، واصل بإيقاع يناسبك." : "ابدأ بخطوة اليوم، والراحة جزء من الطريق.";
+    const streakElement = document.querySelector("#study-streak");
+    if (streakElement) {
+      streakElement.textContent = arabicNumber(streak);
+      document.querySelector("#study-streak-hint").textContent = streak ? "تقدّم جميل، واصل بإيقاع يناسبك." : "ابدأ بخطوة اليوم، والراحة جزء من الطريق.";
+    }
 
     // الملخص السريع في الصفحة الرئيسية
     if (quickTodayMinutes) {
       quickTodayMinutes.textContent = totalMinutes > 0
         ? `${arabicNumber(totalMinutes)} دقيقة`
         : "٠ دقيقة";
-      quickTodayHint.textContent = totalMinutes > 0
-        ? `حققت ${arabicNumber(Math.min(100, Math.round((totalMinutes / dailyGoal) * 100)))}٪ من هدفك اليومي.`
-        : "ابدأ جلستك الأولى لتظهر هنا.";
+      if (quickTodayHint) {
+        quickTodayHint.textContent = totalMinutes > 0
+          ? `حققت ${arabicNumber(percent)}٪ من هدفك اليومي.`
+          : "ابدأ جلستك الأولى لتظهر هنا.";
+      }
     }
   }
 
   function renderChart() {
+    if (!chartElement || !chartTotal) return;
     const days = [];
     for (let i = 6; i >= 0; i--) days.push(addDays(new Date(), -i));
     const totals = days.map((day) => sessions
@@ -394,6 +410,8 @@
   }
 
   function renderMonthSummary() {
+    const monthMinutes = document.querySelector("#month-minutes");
+    if (!monthMinutes) return;
     const today = new Date();
     const start = dateKey(new Date(today.getFullYear(), today.getMonth(), 1));
     const monthSessions = sessions.filter((session) => session.study_date >= start && session.study_date <= dateKey(today));
@@ -469,22 +487,41 @@
     if (password.length < 8) return showMessage(authMessage, "كلمة المرور يجب ألا تقل عن ٨ أحرف.");
     if (isSignUp && password !== authConfirmInput.value) return showMessage(authMessage, "كلمتا المرور غير متطابقتين.");
     submit.disabled = true;
+    authForm.setAttribute("aria-busy", "true");
     showMessage(authMessage, isSignUp ? "جارٍ إنشاء الحساب..." : "جارٍ تسجيل الدخول...");
-    const result = isSignUp
-      ? await supabaseClient.auth.signUp({ email, password })
-      : await supabaseClient.auth.signInWithPassword({ email, password });
-    submit.disabled = false;
-    if (result.error) {
-      showMessage(authMessage, friendlyAuthError(result.error));
-      console.error(result.error);
-      return;
+    let timeoutId;
+    try {
+      const authRequest = isSignUp
+        ? supabaseClient.auth.signUp({ email, password })
+        : supabaseClient.auth.signInWithPassword({ email, password });
+      const result = await Promise.race([
+        authRequest,
+        new Promise((_, reject) => {
+          timeoutId = window.setTimeout(() => reject(Object.assign(new Error("auth_timeout"), { code: "auth_timeout" })), 20000);
+        }),
+      ]);
+      if (result.error) {
+        showMessage(authMessage, friendlyAuthError(result.error));
+        console.error(result.error);
+        return;
+      }
+      if (isSignUp && !result.data.session) {
+        showMessage(authMessage, "تم إنشاء الحساب. افتح رسالة التأكيد التي وصلت إلى بريدك، ثم سجّل الدخول.", true);
+        authForm.reset();
+        return;
+      }
+      if (result.data.user) {
+        showMessage(authMessage, "تم تسجيل الدخول، جارٍ تحميل بياناتك...", true);
+        await setUser(result.data.user);
+      }
+    } catch (error) {
+      console.error(error);
+      showMessage(authMessage, friendlyAuthError(error));
+    } finally {
+      window.clearTimeout(timeoutId);
+      submit.disabled = false;
+      authForm.removeAttribute("aria-busy");
     }
-    if (isSignUp && !result.data.session) {
-      showMessage(authMessage, "تم إنشاء الحساب. افتح رسالة التأكيد التي وصلت إلى بريدك، ثم سجّل الدخول.", true);
-      authForm.reset();
-      return;
-    }
-    if (result.data.user) await setUser(result.data.user);
   }
 
   async function handleForgotPassword() {
@@ -493,16 +530,22 @@
     const button = document.querySelector("#auth-forgot");
     button.disabled = true;
     showMessage(authMessage, "جارٍ إرسال رابط إعادة التعيين...");
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}${window.location.pathname}`,
-    });
-    button.disabled = false;
-    if (error) {
-      showMessage(authMessage, friendlyAuthError(error));
+    try {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}${window.location.pathname}`,
+      });
+      if (error) {
+        showMessage(authMessage, friendlyAuthError(error));
+        console.error(error);
+        return;
+      }
+      showMessage(authMessage, "أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك. تحقق من صندوق الوارد.", true);
+    } catch (error) {
       console.error(error);
-      return;
+      showMessage(authMessage, friendlyAuthError(error));
+    } finally {
+      button.disabled = false;
     }
-    showMessage(authMessage, "أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك. تحقق من صندوق الوارد.", true);
   }
 
   function showRecoveryPanel(user) {
@@ -511,6 +554,8 @@
     studentArea.classList.add("hidden");
     recoveryPanel.classList.remove("hidden");
     signOutButton.classList.remove("hidden");
+    themeToggle.classList.add("hidden");
+    settingsTopButton.classList.add("hidden");
     document.querySelector("#recovery-password").focus();
   }
 
@@ -523,27 +568,34 @@
     if (password !== confirm) return showMessage(recoveryMessage, "كلمتا المرور غير متطابقتين.");
     submit.disabled = true;
     showMessage(recoveryMessage, "جارٍ حفظ كلمة المرور الجديدة...");
-    const { data, error } = await supabaseClient.auth.updateUser({ password });
-    submit.disabled = false;
-    if (error) {
-      showMessage(recoveryMessage, friendlyAuthError(error));
+    try {
+      const { data, error } = await supabaseClient.auth.updateUser({ password });
+      if (error) {
+        showMessage(recoveryMessage, friendlyAuthError(error));
+        console.error(error);
+        return;
+      }
+      showMessage(recoveryMessage, "تم حفظ كلمة المرور الجديدة. أهلًا بعودتك!", true);
+      await setUser(data.user);
+      recoveryPanel.classList.add("hidden");
+      recoveryForm.reset();
+    } catch (error) {
       console.error(error);
-      return;
+      showMessage(recoveryMessage, friendlyAuthError(error));
+    } finally {
+      submit.disabled = false;
     }
-    showMessage(recoveryMessage, "تم حفظ كلمة المرور الجديدة. أهلًا بعودتك!", true);
-    await setUser(data.user);
-    recoveryPanel.classList.add("hidden");
-    recoveryForm.reset();
   }
 
   async function saveGoal() {
+    if (!goalInput) return;
     const value = Number(goalInput.value);
     if (!Number.isInteger(value) || value < 5 || value > 1440) {
       return showMessage(goalMessage, "أدخل هدفًا بين ٥ و١٤٤٠ دقيقة.");
     }
-    goalSaveButton.disabled = true;
+    if (goalSaveButton) goalSaveButton.disabled = true;
     const { data, error } = await supabaseClient.auth.updateUser({ data: { daily_goal: value } });
-    goalSaveButton.disabled = false;
+    if (goalSaveButton) goalSaveButton.disabled = false;
     if (error) {
       showMessage(goalMessage, friendlyAuthError(error));
       console.error(error);
@@ -556,29 +608,47 @@
   }
 
   async function setUser(user) {
+    if (!user?.id) return;
+    if (initializedUserId === user.id) return;
+    if (initializingUserId === user.id && initializationPromise) return initializationPromise;
     currentUser = user;
-    demoArea.classList.add("hidden");
+    initializingUserId = user.id;
     document.body.classList.add("app-mode");
     dailyGoal = Number(user?.user_metadata?.daily_goal) || DEFAULT_GOAL;
-    goalInput.value = dailyGoal;
+    if (goalInput) goalInput.value = dailyGoal;
     authPanel.classList.add("hidden");
     recoveryPanel.classList.add("hidden");
     studentArea.classList.remove("hidden");
     signOutButton.classList.remove("hidden");
+    themeToggle.classList.remove("hidden");
+    settingsTopButton.classList.remove("hidden");
     const hashPage = window.location.hash.slice(1);
     navigateToPage(hashPage || "home", false);
-    await loadSessions();
-    await Promise.all([loadTasks(), loadPlan()]);
-
-    // عرض شاشة الترحيب للمستخدم الجديد بعد تسجيل الدخول
-    try {
-      const alreadyOnboarded = localStorage.getItem("study-tracker-onboarded") === "true";
-      if (!alreadyOnboarded) {
-        onboardingModal.classList.remove("hidden");
-        showOnboardingPage(0);
+    initializationPromise = (async () => {
+      await loadSessions();
+      await Promise.all([loadTasks(), loadPlan()]);
+      initializedUserId = user.id;
+      // شاشة التعريف الأولى لا تظهر إلا بعد تسجيل الدخول.
+      try {
+        const alreadyOnboarded = localStorage.getItem("study-tracker-onboarded") === "true";
+        if (!alreadyOnboarded) {
+          onboardingModal.classList.remove("hidden");
+          showOnboardingPage(0);
+        }
+      } catch (error) {
+        console.warn("تعذر قراءة حالة الترحيب.", error);
       }
+    })();
+    try {
+      await initializationPromise;
     } catch (error) {
-      console.warn("تعذر قراءة حالة الترحيب.", error);
+      console.error("تعذر تجهيز مساحة الطالب.", error);
+      showMessage(cloudMessage, "تم تسجيل الدخول، لكن تعذر تحميل بعض بياناتك. تحقق من الاتصال ثم حدّث الصفحة.");
+    } finally {
+      if (initializingUserId === user.id) {
+        initializingUserId = null;
+        initializationPromise = null;
+      }
     }
   }
 
@@ -593,12 +663,17 @@
 
   function showSignedOut() {
     currentUser = null;
+    initializedUserId = null;
+    initializingUserId = null;
+    initializationPromise = null;
     sessions = [];
     tasks = [];
     planItems = [];
     studentArea.classList.add("hidden");
     document.body.classList.remove("app-mode");
     signOutButton.classList.add("hidden");
+    themeToggle.classList.add("hidden");
+    settingsTopButton.classList.add("hidden");
     recoveryPanel.classList.add("hidden");
     authPanel.classList.remove("hidden");
     authForm.reset();
@@ -1072,21 +1147,10 @@
   loadAppearance();
   applyAppearance();
   themeToggle.textContent = appearance.theme === "night" ? "🌙" : "☀️";
-  demoOpenButton.addEventListener("click", () => {
-    authPanel.classList.add("hidden");
-    recoveryPanel.classList.add("hidden");
-    demoArea.classList.remove("hidden");
-    demoArea.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-  demoCloseButton.addEventListener("click", () => {
-    demoArea.classList.add("hidden");
-    authPanel.classList.remove("hidden");
-    authPanel.scrollIntoView({ behavior: "smooth", block: "center" });
-  });
   document.querySelector("#auth-forgot").addEventListener("click", handleForgotPassword);
   authForm.addEventListener("submit", handleAuth);
   recoveryForm.addEventListener("submit", handleRecovery);
-  goalSaveButton.addEventListener("click", saveGoal);
+  if (goalSaveButton) goalSaveButton.addEventListener("click", saveGoal);
   timerToggle.addEventListener("click", toggleTimer);
   exportAccountDataButton.addEventListener("click", exportAccountData);
   document.querySelector("#export-csv").addEventListener("click", exportCsv);
@@ -1309,7 +1373,11 @@
   const config = window.STUDY_TRACKER_CONFIG || {};
   const configured = config.supabaseUrl && config.publishableKey && !config.supabaseUrl.includes("ضع-") && !config.publishableKey.includes("ضع-");
   if (!configured || !window.supabase?.createClient) {
-    document.querySelector("#setup-note").classList.remove("hidden");
+    const setupNote = document.querySelector("#setup-note");
+    setupNote.textContent = !window.supabase?.createClient
+      ? "تعذر تحميل خدمة تسجيل الدخول. تحقق من اتصال الإنترنت ثم أعد تحميل الصفحة."
+      : "إعدادات Supabase غير مكتملة. تحقق من رابط المشروع والمفتاح العام في supabase-config.js.";
+    setupNote.classList.remove("hidden");
     document.querySelector("#auth-submit").disabled = true;
     document.querySelector("#auth-switch").disabled = true;
     document.querySelector("#auth-forgot").disabled = true;
@@ -1318,17 +1386,37 @@
     if (urlErrorCode && !/type=recovery/.test(window.location.hash)) {
       showMessage(authMessage, describeUrlError(urlErrorCode));
     }
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      // لا تستدعِ طلبات Supabase داخل callback؛ قد يؤدي ذلك إلى تعليق العميل.
+      window.setTimeout(() => {
+        if (event === "PASSWORD_RECOVERY" && session?.user) {
+          showRecoveryPanel(session.user);
+        } else if (session?.user && currentUser?.id !== session.user.id) {
+          setUser(session.user).catch((error) => {
+            console.error("تعذر فتح مساحة الطالب بعد الدخول.", error);
+            showMessage(cloudMessage, "تم تسجيل الدخول، لكن تعذر تحميل بيانات التطبيق. حدّث الصفحة أو تحقق من الاتصال.");
+          });
+        } else if (event === "SIGNED_OUT") {
+          showSignedOut();
+        }
+      }, 0);
+    });
     supabaseClient.auth.getSession().then(({ data, error }) => {
-      if (error) console.error(error);
+      if (error) {
+        console.error(error);
+        authPanel.classList.remove("hidden");
+        showMessage(authMessage, friendlyAuthError(error));
+        return;
+      }
       const user = data?.session?.user;
       const recovering = /type=recovery/.test(window.location.hash);
       if (user && recovering) showRecoveryPanel(user);
-      else if (user) setUser(user);
+      else if (user) return setUser(user);
       else authPanel.classList.remove("hidden");
-    });
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" && session?.user) showRecoveryPanel(session.user);
-      else if (session?.user && !currentUser) setUser(session.user);
+    }).catch((error) => {
+      console.error("تعذر استعادة جلسة الدخول المحفوظة.", error);
+      authPanel.classList.remove("hidden");
+      showMessage(authMessage, "تعذر الاتصال بخدمة الدخول الآن. تحقق من الإنترنت وحاول مجددًا.");
     });
 
     // PWA: تسجيل عامل الخدمة للعمل دون اتصال (فقط عبر HTTPS).

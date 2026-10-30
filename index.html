@@ -20,26 +20,12 @@
       <a class="brand" href="#home" data-page="home" aria-label="اجتماع النقط - الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">ن</span><span>اجتماع النقط</span></a>
       <div class="topbar-actions">
         <time class="today-label" id="today-label"></time>
-        <button class="button button-quiet" id="theme-toggle" type="button" aria-label="تبديل المظهر النهاري/الليلي" title="الوضع النهاري / الليلي">☀️/🌙</button>
-        <button class="button button-quiet" id="settings-top" type="button" data-page="settings" aria-label="الإعدادات" title="الإعدادات">⚙</button>
+        <button class="button button-quiet hidden" id="theme-toggle" type="button" aria-label="تبديل المظهر النهاري/الليلي" title="الوضع النهاري / الليلي">☀️/🌙</button>
+        <button class="button button-quiet hidden" id="settings-top" type="button" data-page="settings" aria-label="الإعدادات" title="الإعدادات">⚙</button>
         <button class="button button-quiet hidden" id="sign-out" type="button">تسجيل الخروج</button>
       </div>
     </header>
 
-    <section class="intro" aria-labelledby="page-title">
-      <p class="eyebrow">خطوة صغيرة كل يوم</p><h1 id="page-title">جلساتك... لها أثرٌ يبقى ✨</h1>
-      <p class="intro-copy">سجّل جلساتك، ونظّم مهامك وخطتك، وتابع تقدّمك الدراسي من أي جهاز.</p>
-    </section>
-
-    <section class="poem-card" aria-label="بيت من الشعر في طلب العلم">
-      <span class="poem-corner poem-corner-tr" aria-hidden="true"></span>
-      <span class="poem-corner poem-corner-tl" aria-hidden="true"></span>
-      <span class="poem-corner poem-corner-br" aria-hidden="true"></span>
-      <span class="poem-corner poem-corner-bl" aria-hidden="true"></span>
-      <p class="poem-verse"><span>اليوم شيءٌ وغدًا مثلُه</span><i aria-hidden="true">✦</i><span>من نُخب العلمِ التي تُلتقطْ</span></p>
-      <p class="poem-verse"><span>يُحصِّل المَرء بها حكمةً</span><i aria-hidden="true">✦</i><span>وإنما السيلُ اجتماع النقطْ</span></p>
-      <p class="poem-caption">لا تحقرن صغيرةً <span aria-hidden="true">*</span> إن الجبال من الحصى</p>
-    </section>
     <section class="panel auth-panel" id="auth-panel" aria-labelledby="auth-heading">
       <div class="panel-heading"><div><p class="eyebrow">حسابك الدراسي</p><h2 id="auth-heading">تسجيل الدخول</h2></div><span class="heading-icon" aria-hidden="true">↗</span></div>
       <p class="auth-description" id="auth-description">سجّل الدخول لمتابعة جلساتك المحفوظة في حسابك.</p>
@@ -52,6 +38,7 @@
       </form>
       <p class="auth-switch" id="auth-switch-row">ليس لديك حساب؟ <button class="text-action" type="button" id="auth-switch">إنشاء حساب جديد</button></p>
       <p class="auth-forgot-row" id="forgot-row"><button class="text-action" type="button" id="auth-forgot">نسيت كلمة المرور؟</button></p>
+      <p class="auth-privacy-row"><button class="text-action" type="button" id="privacy-open-from-form">بيان الخصوصية</button></p>
       <details class="how-to-card">
         <summary>ما فكرة التطبيق؟ وكيف أستخدمه؟</summary>
         <div class="how-to-content">
@@ -59,23 +46,7 @@
           <ol><li>أنشئ حسابًا أو سجّل الدخول لحفظ بياناتك.</li><li>أضف جلسة بعد المذاكرة أو استخدم المؤقت، وسجّل المادة والمدة وملاحظة اختيارية.</li><li>رتّب مهامك وخطة أسبوعك من قسمي «مهامي» و«التخطيط».</li><li>تابع وقتك وأهدافك وإحصاءاتك، وعدّل جلساتك أو صدّرها عند الحاجة.</li></ol>
         </div>
       </details>
-      <button class="button button-quiet demo-open" id="demo-open" type="button">استكشف التطبيق ببيانات تجريبية <span aria-hidden="true">←</span></button>
       <p class="setup-note hidden" id="setup-note">أضف رابط مشروع Supabase ومفتاحه العام في ملف <strong>supabase-config.js</strong> لتفعيل تسجيل الدخول.</p>
-    </section>
-
-    <section class="demo-area hidden" id="demo-area" aria-labelledby="demo-heading">
-      <div class="demo-notice"><strong>معاينة للقراءة فقط</strong><span>هذه بيانات وهمية للتوضيح؛ لا تُحفظ ولا تُرسل إلى أي مكان.</span></div>
-      <div class="panel-heading demo-title"><div><p class="eyebrow">نموذج توضيحي</p><h2 id="demo-heading">هكذا تبدو لوحة الدراسة</h2></div><button class="button button-quiet" id="demo-close" type="button">العودة لتسجيل الدخول</button></div>
-      <section class="demo-stats" aria-label="إحصاءات تجريبية">
-        <article class="demo-card"><span>وقت الدراسة اليوم</span><strong>١ ساعة و٣٥ دقيقة</strong><small>جلستان تجريبيتان</small></article>
-        <article class="demo-card"><span>الهدف اليومي</span><strong>٧٩٪</strong><small>من هدف ١٢٠ دقيقة</small></article>
-        <article class="demo-card"><span>مهام قيد الإنجاز</span><strong>٣ مهام</strong><small>مهمة واحدة أُنجزت</small></article>
-      </section>
-      <section class="panel demo-panel"><div class="panel-heading"><div><p class="eyebrow">مثال على السجل</p><h3>جلسات الدراسة</h3></div></div>
-        <ul class="demo-list"><li><span><strong>الرياضيات</strong><small>مراجعة المعادلات</small></span><b>٥٠ دقيقة</b></li><li><span><strong>الأحياء</strong><small>تلخيص الفصل الثاني</small></span><b>٤٥ دقيقة</b></li></ul>
-      </section>
-      <div class="demo-columns"><section class="panel demo-panel"><p class="eyebrow">مثال على التنظيم</p><h3>مهام قادمة</h3><ul class="demo-simple-list"><li>حل مسائل الفصل الثالث</li><li>مراجعة مفردات اللغة الإنجليزية</li><li>تسليم الملخص</li></ul></section>
-        <section class="panel demo-panel"><p class="eyebrow">مثال على التخطيط</p><h3>خطة الأسبوع</h3><ul class="demo-simple-list"><li>الأحد · رياضيات · ٥:٠٠ م</li><li>الثلاثاء · أحياء · ٦:٣٠ م</li><li>الخميس · مراجعة عامة</li></ul></section></div>
     </section>
 
     <section class="panel auth-panel hidden" id="recovery-panel" aria-labelledby="recovery-heading">
@@ -167,7 +138,7 @@
               <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
               <div class="form-actions"><button class="button button-primary" type="submit" id="submit-button">حفظ الجلسة <span aria-hidden="true">←</span></button><button class="button button-quiet hidden" type="button" id="cancel-edit">إلغاء التعديل</button></div>
             </form>
-            <p class="privacy-note"><span aria-hidden="true">♧</span> تُحفظ الجلسات في حسابك. <button class="text-action" type="button" id="privacy-open-from-form" aria-label="اقرأ بيان الخصوصية">اقرأ بيان الخصوصية</button>.</p>
+            <p class="privacy-note"><span aria-hidden="true">♧</span> تُحفظ جلساتك في حسابك وتُحمى بسياسات قاعدة البيانات.</p>
           </section>
           <section class="panel sessions-panel" aria-labelledby="sessions-heading">
             <div class="panel-heading sessions-heading"><div><p class="eyebrow">إنجازاتك</p><h2 id="sessions-heading">جلساتي</h2></div><div class="heading-tools"><span class="count-badge" id="session-badge">٠ جلسات</span><button class="text-action" type="button" id="export-csv">تصدير CSV</button></div></div>
