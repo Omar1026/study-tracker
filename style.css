@@ -884,3 +884,86 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 
 .password-control{position:relative}.password-control input{padding-inline-end:72px}.password-toggle{position:absolute;inset-inline-end:9px;top:50%;transform:translateY(-50%);min-width:52px;padding:5px 7px;border:0;border-radius:7px;background:var(--teal-soft);color:var(--teal-dark);font:inherit;font-size: 0.6875rem;font-weight:700;cursor:pointer}.password-toggle:hover{background:var(--gold-soft)}.auth-confirm-row{margin-top:12px}
+
+/* ===== تجاوب الصفحة الرئيسية (يجب أن يبقى في نهاية الملف) ===== */
+@media (max-width: 900px) {
+  .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-card:last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 760px) {
+  .page-shell { padding: 16px 14px 20px; }
+
+  /* الشريط العلوي: الشعار والأزرار في سطر، والتاريخ في سطر مستقل */
+  .topbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 6px 8px;
+    padding-bottom: 12px;
+  }
+  .topbar-actions { display: contents; }
+  .brand { grid-column: 1; grid-row: 1; font-size: 1rem; }
+  .brand-mark { width: 34px; height: 34px; font-size: 1.15rem; border-radius: 11px; }
+  .today-label { grid-column: 1 / -1; grid-row: 2; max-width: none; text-align: center; font-size: 0.7rem; line-height: 1.6; }
+  #sign-out { grid-column: 2; grid-row: 1; justify-self: end; font-size: 0.65rem; padding: 6px 8px; }
+  #theme-toggle { grid-column: 3; grid-row: 1; }
+  #settings-top { grid-column: 4; grid-row: 1; }
+  #theme-toggle, #settings-top { font-size: 1.05rem; padding: 6px 8px; }
+
+  /* العنوان والبيت */
+  .home-hero { padding: 22px 0 6px; }
+  .home-hero .eyebrow { font-size: 0.72rem; margin-bottom: 7px; }
+  .home-hero h1 { font-size: clamp(1.85rem, 9vw, 2.5rem); margin-bottom: 8px; }
+  .home-subtitle { font-size: 0.92rem; line-height: 1.65; }
+  .poem-card { padding: 20px 14px 14px; margin: 2px auto 18px; border-radius: 16px; }
+  .poem-card::before { inset: 5px; border-radius: 11px; }
+  .poem-verse { gap: 8px; margin-bottom: 8px; font-size: 1.02rem; line-height: 1.9; }
+  .poem-verse i { font-size: 0.7em; }
+  .poem-caption { margin-top: 10px; padding-top: 9px; font-size: 0.7rem; }
+
+  /* بطاقات الأقسام: عمود واحد مريح */
+  .home-grid { grid-template-columns: 1fr; gap: 11px; margin: 18px 0 8px; }
+  .home-card, .home-card:last-child { grid-column: auto; padding: 15px 16px; gap: 13px; border-radius: 18px; }
+  .home-card .card-icon { width: 46px; height: 46px; border-radius: 14px; font-size: 1.45rem; }
+  .home-card h3 { font-size: 1rem; margin-bottom: 3px; }
+  .home-card p { font-size: 0.78rem; line-height: 1.5; }
+  .home-card .card-arrow { font-size: 1.05rem; }
+
+  /* الملخص السريع */
+  .home-quick { margin: 18px 0 8px; }
+  .quick-card { flex-direction: row; align-items: center; text-align: start; gap: 12px; padding: 14px 16px; border-radius: 16px; }
+  .quick-icon { width: 42px; height: 42px; border-radius: 12px; font-size: 1.3rem; }
+  .quick-label { font-size: 0.72rem; margin-bottom: 2px; }
+  .quick-value { font-size: 1.15rem; }
+  .quick-hint { font-size: 0.7rem; }
+
+  /* التنقل السفلي/العلوي */
+  .main-navigation { gap: 2px; padding: 4px; overflow-x: auto; scrollbar-width: none; }
+  .main-navigation::-webkit-scrollbar { display: none; }
+  .main-navigation .section-tab { flex: 1 0 auto; min-width: 58px; padding: 8px 4px; font-size: 0.62rem; gap: 1px; }
+  .main-navigation .section-tab span { font-size: 1.05em; }
+
+  /* الصفحات الأخرى */
+  .panel { padding: 16px; }
+  .section-tabs:not(.main-navigation) { flex-wrap: wrap; }
+  .auth-panel { padding: 22px 18px; border-radius: 22px; margin-top: 16px; }
+  .auth-panel .panel-heading { margin-bottom: 16px; }
+  .privacy-card { padding: 22px 18px; max-height: 92vh; }
+  .privacy-modal, .onboarding-modal { padding: 12px; }
+  .onboarding-card { padding: 24px 18px 20px; border-radius: 20px; }
+  .onboarding-pages { height: 205px; margin: 16px 0 20px; }
+  .onboarding-page p { font-size: 0.84rem; }
+  .onboarding-card h2 { font-size: 1.4rem; }
+}
+
+@media (max-width: 390px) {
+  .page-shell { padding-inline: 11px; }
+  .home-hero h1 { font-size: 1.7rem; }
+  .home-card { padding: 13px 13px; gap: 11px; }
+  .home-card .card-icon { width: 42px; height: 42px; font-size: 1.3rem; }
+  .home-card p { font-size: 0.74rem; }
+  .home-card .card-arrow { display: none; }
+  .main-navigation .section-tab { min-width: 52px; font-size: 0.56rem; }
+  .quick-hint { font-size: 0.66rem; }
+}
