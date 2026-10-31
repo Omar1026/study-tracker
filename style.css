@@ -857,7 +857,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .home-top { grid-template-columns: 1fr; }
   .home-top .home-hero { padding: 16px 0 2px; }
   .home-top .home-cta { max-width: none; }
-  .home-tools .home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
