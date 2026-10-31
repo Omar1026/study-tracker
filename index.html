@@ -28,10 +28,12 @@
     <symbol id="i-privacy" viewBox="0 0 24 24"><path d="M12 3.2 5 6v5.4c0 4.2 2.8 7.9 7 9.4 4.2-1.5 7-5.2 7-9.4V6l-7-2.8Z"/><path d="M9.2 12.2 11 14l3.9-3.9"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3.4" y="5.4" width="17.2" height="13.2" rx="2.4"/><path d="m4.2 7.2 7.8 6 7.8-6"/></symbol>
     <symbol id="i-suggestion" viewBox="0 0 24 24"><path d="M20.4 12.6a7.9 7.9 0 0 1-8.4 7.9 8.8 8.8 0 0 1-2.8-.6L4.2 21l1.2-4.9A7.9 7.9 0 1 1 20.4 12.6Z"/><path d="M9 11.8h6M9 14.9h3.6"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8.6 5.4 18.8 12 8.6 18.6Z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.2l1.9 5.4 5.4 1.9-5.4 1.9L12 17.8l-1.9-5.4-5.4-1.9 5.4-1.9Z"/><path d="M18.6 16.2l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"/></symbol>
   </svg>
   <main class="page-shell">
     <header class="topbar">
-      <a class="brand" href="#home" data-page="home" aria-label="اجتماع النقط - الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">ن</span><span>اجتماع النقط</span></a>
+      <a class="brand" href="#home" data-page="home" aria-label="اجتماع النقط - الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">ن</span><span class="sr-only">اجتماع النقط</span></a>
       <div class="topbar-actions">
         <time class="today-label" id="today-label"></time>
         <button class="button button-quiet icon-button hidden" id="theme-toggle" type="button" aria-label="تبديل المظهر النهاري/الليلي" title="الوضع النهاري / الليلي" aria-pressed="false">
@@ -58,6 +60,19 @@
       <p class="auth-switch" id="auth-switch-row">ليس لديك حساب؟ <button class="text-action" type="button" id="auth-switch">إنشاء حساب جديد</button></p>
       <p class="auth-forgot-row" id="forgot-row"><button class="text-action" type="button" id="auth-forgot">نسيت كلمة المرور؟</button></p>
       <p class="auth-privacy-row"><button class="text-action" type="button" id="privacy-open-from-form">بيان الخصوصية</button></p>
+      <div class="demo-entry">
+        <div class="demo-entry-head">
+          <span class="demo-entry-icon" aria-hidden="true"><svg class="icon"><use href="#i-spark"/></svg></span>
+          <div>
+            <p class="demo-entry-title">جرّب التطبيق قبل التسجيل</p>
+            <p class="demo-entry-hint">معاينة كاملة ببيانات وهمية: جلسات، مهام، خطة أسبوع، وإحصاءات — دون بريد أو كلمة مرور.</p>
+          </div>
+        </div>
+        <button class="button demo-entry-btn" type="button" id="demo-start">
+          <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+          ابدأ المعاينة الآن
+        </button>
+      </div>
       <details class="how-to-card">
         <summary>ما فكرة التطبيق؟ وكيف أستخدمه؟</summary>
         <div class="how-to-content">
@@ -79,6 +94,16 @@
       </form>
     </section>
     <div id="student-area" class="hidden">
+      <div class="demo-banner hidden" id="demo-banner" role="status" aria-live="polite">
+        <div class="demo-banner-text">
+          <span class="demo-badge">وضع المعاينة</span>
+          <span id="demo-banner-text">تستكشف التطبيق ببيانات وهمية — لا يُحفظ شيء في حسابك.</span>
+        </div>
+        <div class="demo-banner-actions">
+          <button class="button button-primary demo-banner-btn" type="button" id="demo-signup">أنشئ حسابك</button>
+          <button class="button button-quiet demo-banner-btn" type="button" id="demo-exit">إنهاء المعاينة</button>
+        </div>
+      </div>
       <nav class="section-tabs main-navigation" aria-label="التنقل الرئيسي">
         <button class="section-tab is-active" type="button" data-page="home" aria-current="page"><svg class="icon nav-icon" aria-hidden="true"><use href="#i-home"/></svg> <span class="nav-label">الرئيسية</span></button>
         <button class="section-tab" type="button" data-page="sessions"><svg class="icon nav-icon" aria-hidden="true"><use href="#i-clock"/></svg> <span class="nav-label">الجلسات</span></button>
@@ -153,7 +178,7 @@
           </div>
           <div class="home-grid" aria-label="الأقسام الرئيسية">
             <button type="button" class="home-card" data-page="sessions" aria-label="سجل جلسة دراسة جديدة">
-              <span class="card-icon icon-study">📖</span>
+              <span class="card-icon icon-study" aria-hidden="true"><svg class="icon"><use href="#i-clock"/></svg></span>
               <div class="card-body">
                 <h3>سجلات الدراسة</h3>
                 <p>سجّل وقت مذاكرتك، المادة، المدة والملاحظات لكل جلسة.</p>
@@ -161,7 +186,7 @@
               <span class="card-arrow">→</span>
             </button>
             <button type="button" class="home-card" data-page="tasks" aria-label="إدارة المهام اليومية">
-              <span class="card-icon icon-tasks">✅</span>
+              <span class="card-icon icon-tasks" aria-hidden="true"><svg class="icon"><use href="#i-tasks"/></svg></span>
               <div class="card-body">
                 <h3>مهامي</h3>
                 <p>أضف المهام التي تريد إنجازها وتابع حالتها أولًا بأول.</p>
@@ -169,7 +194,7 @@
               <span class="card-arrow">→</span>
             </button>
             <button type="button" class="home-card" data-page="planner" aria-label="التخطيط الأسبوعي">
-              <span class="card-icon icon-plan">📅</span>
+              <span class="card-icon icon-plan" aria-hidden="true"><svg class="icon"><use href="#i-calendar"/></svg></span>
               <div class="card-body">
                 <h3>خطة الأسبوع</h3>
                 <p>نظّم وقت دراستك على أيام الأسبوع وحدد موعدًا لكل مادة.</p>
