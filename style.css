@@ -916,14 +916,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .home-hero .eyebrow { font-size: 0.72rem; margin-bottom: 7px; }
   .home-hero h1 { font-size: clamp(1.85rem, 9vw, 2.5rem); margin-bottom: 8px; }
   .home-subtitle { font-size: 0.92rem; line-height: 1.65; }
-  .poem-card { padding: 20px 14px 14px; margin: 2px auto 18px; border-radius: 16px; }
+  .poem-card { padding: 20px 14px 14px; margin: 2px auto 4px; border-radius: 16px; }
   .poem-card::before { inset: 5px; border-radius: 11px; }
   .poem-verse { gap: 8px; margin-bottom: 8px; font-size: 1.02rem; line-height: 1.9; }
   .poem-verse i { font-size: 0.7em; }
   .poem-caption { margin-top: 10px; padding-top: 9px; font-size: 0.7rem; }
 
   /* بطاقات الأقسام: عمود واحد مريح */
-  .home-grid { grid-template-columns: 1fr; gap: 11px; margin: 18px 0 8px; }
+  .home-grid { grid-template-columns: 1fr; gap: 11px; margin: 10px 0 8px; }
   .home-card, .home-card:last-child { grid-column: auto; padding: 15px 16px; gap: 13px; border-radius: 18px; }
   .home-card .card-icon { width: 46px; height: 46px; border-radius: 14px; font-size: 1.45rem; }
   .home-card h3 { font-size: 1rem; margin-bottom: 3px; }
@@ -938,11 +938,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .quick-value { font-size: 1.15rem; }
   .quick-hint { font-size: 0.7rem; }
 
-  /* التنقل السفلي/العلوي */
-  .main-navigation { gap: 2px; padding: 4px; overflow-x: auto; scrollbar-width: none; }
+  /* شريط تنقل سفلي ثابت */
+  .main-navigation {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    margin: 0;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    gap: 2px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -10px 34px rgba(10, 40, 36, 0.12);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
   .main-navigation::-webkit-scrollbar { display: none; }
-  .main-navigation .section-tab { flex: 1 0 auto; min-width: 58px; padding: 8px 4px; font-size: 0.62rem; gap: 1px; }
-  .main-navigation .section-tab span { font-size: 1.05em; }
+  .main-navigation .section-tab { flex: 1 0 auto; min-width: 54px; padding: 7px 2px; font-size: 0.58rem; gap: 1px; border-radius: 10px; }
+  .main-navigation .section-tab span { font-size: 1.15em; }
+  body.app-mode .page-shell { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
 
   /* الصفحات الأخرى */
   .panel { padding: 16px; }
@@ -966,4 +984,59 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .home-card .card-arrow { display: none; }
   .main-navigation .section-tab { min-width: 52px; font-size: 0.56rem; }
   .quick-hint { font-size: 0.66rem; }
+}
+
+/* ===== زر البدء السريع ===== */
+.home-cta { margin: 16px 0 0; }
+.quick-start-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 20px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  color: #fff;
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(14, 92, 84, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.quick-start-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(14, 92, 84, 0.34); }
+.quick-start-btn:active { transform: translateY(0); }
+.quick-start-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 1.15rem;
+  flex: 0 0 auto;
+}
+.quick-start-text { min-width: 0; }
+.quick-start-btn strong { display: block; font-size: 1rem; margin-bottom: 3px; }
+.quick-start-btn small { display: block; font-size: 0.75rem; color: rgba(255, 255, 255, 0.82); }
+
+/* ===== صفحة تقدمي ===== */
+.progress-heading { text-align: center; padding: 10px 0 2px; }
+.progress-heading .eyebrow { color: var(--gold); }
+.progress-heading h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 4.5vw, 2.4rem); color: var(--teal-dark); line-height: 1.25; }
+.progress-heading .home-subtitle { font-size: 0.95rem; }
+.goal-progress-panel .goal-progress { margin: 2px 0 10px; height: 9px; }
+#goal-progress-text { margin: 0; }
+.chart-panel .chart { margin-top: 4px; }
+
+@media (max-width: 760px) {
+  .home-cta { margin: 14px 0 0; }
+  .quick-start-btn { padding: 13px 16px; gap: 12px; border-radius: 16px; }
+  .quick-start-icon { width: 42px; height: 42px; border-radius: 12px; font-size: 1rem; }
+  .quick-start-btn strong { font-size: 0.95rem; }
+  .quick-start-btn small { font-size: 0.7rem; }
+  .progress-heading { padding: 6px 0 0; }
+  .progress-heading h1 { font-size: 1.7rem; }
+  .progress-heading .home-subtitle { font-size: 0.88rem; }
+  .goal-progress-panel .goal-progress { height: 8px; }
 }

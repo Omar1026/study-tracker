@@ -40,6 +40,8 @@
   const timerReset = document.querySelector("#timer-reset");
   const sessionSearch = document.querySelector("#session-search");
   const exportAccountDataButton = document.querySelector("#export-account-data");
+  const subjectSuggestions = document.querySelector("#subject-suggestions");
+  const quickStartButton = document.querySelector("#quick-start-btn");
 
   // الشريط العلوي
   const themeToggle = document.querySelector("#theme-toggle");
@@ -235,9 +237,9 @@
   }
 
   function navigateToPage(page, updateHistory = true) {
-    const validPages = ["home", "sessions", "tasks", "planner", "settings"];
+    const validPages = ["home", "sessions", "progress", "tasks", "planner", "settings"];
     if (!validPages.includes(page)) page = "home";
-    const pageTitles = { home: "الرئيسية", sessions: "الجلسات", tasks: "المهام", planner: "التخطيط", settings: "الإعدادات" };
+    const pageTitles = { home: "الرئيسية", sessions: "الجلسات", progress: "تقدمي", tasks: "المهام", planner: "التخطيط", settings: "الإعدادات" };
     currentPage = page;
     document.title = pageTitles[page] + " — اجتماع النقط";
     document.querySelectorAll(".app-page").forEach((view) => {
@@ -250,6 +252,7 @@
       else button.removeAttribute("aria-current");
     });
     if (page === "planner") renderCalendar();
+    if (page === "progress") render();
 
     // إعادة تشغيل رسوم الدخول عند العودة للرئيسية
     if (page === "home") {
@@ -451,11 +454,21 @@
     emptyHint.textContent = hint;
   }
 
+  function updateSubjectSuggestions() {
+    if (!subjectSuggestions) return;
+    const subjects = [...new Set(sessions.map((session) => (session.subject || "").trim()).filter(Boolean))];
+    subjectSuggestions.innerHTML = subjects
+      .slice(0, 40)
+      .map((subject) => `<option value="${escapeHtml(subject)}"></option>`)
+      .join("");
+  }
+
   function render() {
     renderStats();
     renderList();
     renderChart();
     renderMonthSummary();
+    updateSubjectSuggestions();
   }
 
   async function loadSessions(silent = false) {
@@ -1150,6 +1163,18 @@
   document.querySelector("#auth-forgot").addEventListener("click", handleForgotPassword);
   authForm.addEventListener("submit", handleAuth);
   recoveryForm.addEventListener("submit", handleRecovery);
+
+  // زر البدء السريع: ينقل لتسجيل الجلسة ويركّز على حقل المادة
+  if (quickStartButton) {
+    quickStartButton.addEventListener("click", () => {
+      navigateToPage("sessions");
+      window.setTimeout(() => {
+        if (!subjectInput) return;
+        subjectInput.focus({ preventScroll: true });
+        subjectInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+    });
+  }
   if (goalSaveButton) goalSaveButton.addEventListener("click", saveGoal);
   timerToggle.addEventListener("click", toggleTimer);
   exportAccountDataButton.addEventListener("click", exportAccountData);
