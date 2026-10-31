@@ -43,8 +43,18 @@ create table if not exists public.tasks (
   title text not null check (char_length(trim(title)) between 1 and 120),
   due_date date,
   done boolean not null default false,
+  priority text not null default 'normal' check (priority in ('high', 'normal', 'low')),
+  recurrence text not null default 'none' check (recurrence in ('none', 'daily', 'weekly', 'monthly')),
   created_at timestamptz not null default now()
 );
+
+-- ترقية قواعد البيانات القديمة: الأولويات والتكرار.
+alter table public.tasks add column if not exists priority text not null default 'normal';
+alter table public.tasks add column if not exists recurrence text not null default 'none';
+alter table public.tasks drop constraint if exists tasks_priority_check;
+alter table public.tasks add constraint tasks_priority_check check (priority in ('high', 'normal', 'low'));
+alter table public.tasks drop constraint if exists tasks_recurrence_check;
+alter table public.tasks add constraint tasks_recurrence_check check (recurrence in ('none', 'daily', 'weekly', 'monthly'));
 
 create index if not exists tasks_user_done_idx
 on public.tasks (user_id, done, due_date nulls last, created_at desc);

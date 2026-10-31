@@ -1200,3 +1200,38 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .main-navigation .section-tab { flex: 0 1 120px; gap: 5px; padding: 9px 12px; font-size: .8125rem; }
   .main-navigation .section-tab span { font-size: 1.05em; }
 }
+
+/* ===== المهام: الأولويات والتكرار ===== */
+.task-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+.task-form .task-title-field { grid-column: 1 / -1; }
+.task-form .button-primary { justify-content: center; white-space: nowrap; }
+.task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.task-meta .task-due { margin: 0; }
+.task-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 999px;
+  background: var(--canvas); color: var(--muted);
+  font-size: .6875rem; font-weight: 700; line-height: 1.6;
+}
+.task-tag.is-high { background: rgba(180, 87, 74, .12); color: var(--rose); }
+.task-tag.is-repeat { background: var(--gold-soft); color: #8a661f; }
+body[data-theme="night"] .task-tag.is-repeat { color: var(--gold); }
+.task-tag.is-finished { background: var(--teal-soft); color: var(--teal-dark); }
+.task-item.priority-high { border-inline-start: 3px solid var(--rose); }
+.task-item.done { opacity: .85; }
+
+@media (max-width: 900px) {
+  .task-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .task-form .task-title-field,
+  .task-form #task-due,
+  .task-form #task-add { grid-column: 1 / -1; }
+}
+@media (max-width: 390px) {
+  .task-meta { gap: 5px; }
+  .task-tag { font-size: .65rem; padding: 2px 7px; }
+}

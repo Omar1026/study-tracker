@@ -293,8 +293,19 @@
         <section class="panel" aria-labelledby="tasks-heading">
           <div class="panel-heading"><div><p class="eyebrow">ما أنوي إنجازه</p><h2 id="tasks-heading">مهامي</h2></div><div class="heading-tools"><span class="count-badge" id="task-badge">٠ مهام</span></div></div>
           <form id="task-form" class="task-form" novalidate>
-            <input id="task-title" type="text" placeholder="مثال: حل مسائل الفصل الثالث" maxlength="120" required aria-label="عنوان المهمة">
+            <input id="task-title" class="task-title-field" type="text" placeholder="مثال: حل مسائل الفصل الثالث" maxlength="120" required aria-label="عنوان المهمة">
             <input id="task-due" type="date" aria-label="تاريخ الاستحقاق (اختياري)">
+            <select id="task-priority" aria-label="أولوية المهمة">
+              <option value="high">⚡ أولوية عالية</option>
+              <option value="normal" selected>أولوية عادية</option>
+              <option value="low">أولوية منخفضة</option>
+            </select>
+            <select id="task-repeat" aria-label="تكرار المهمة">
+              <option value="none" selected>مرة واحدة</option>
+              <option value="daily">كل يوم</option>
+              <option value="weekly">كل أسبوع</option>
+              <option value="monthly">كل شهر</option>
+            </select>
             <button class="button button-primary" type="submit" id="task-add">إضافة المهمة <span aria-hidden="true">＋</span></button>
           </form>
           <p class="form-message" id="task-message" role="status" aria-live="polite"></p>

@@ -88,6 +88,8 @@
   const taskForm = document.querySelector("#task-form");
   const taskTitleInput = document.querySelector("#task-title");
   const taskDueInput = document.querySelector("#task-due");
+  const taskPriorityInput = document.querySelector("#task-priority");
+  const taskRepeatInput = document.querySelector("#task-repeat");
   const taskList = document.querySelector("#task-list");
   const taskBadge = document.querySelector("#task-badge");
   const taskMessage = document.querySelector("#task-message");
@@ -112,6 +114,7 @@
   let initializationPromise = null;
   let sessions = [];
   let tasks = [];
+  let tasksHaveExtras = true;
   let planItems = [];
   let editingId = null;
   let isSignUp = false;
@@ -144,6 +147,9 @@
   const DEFAULT_GOAL = 120;
   const WEEK_ORDER = [6, 0, 1, 2, 3, 4, 5]; // السبت ثم الأحد..الجمعة
   const WEEK_NAMES = { 0: "الأحد", 1: "الاثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
+  const TASK_PRIORITY_WEIGHT = { high: 0, normal: 1, low: 2 };
+  const TASK_PRIORITY_LABEL = { high: "أولوية عالية", normal: "أولوية عادية", low: "أولوية منخفضة" };
+  const TASK_REPEAT_LABEL = { none: "", daily: "كل يوم", weekly: "كل أسبوع", monthly: "كل شهر" };
   const EMPTY_TEXT = {
     today: ["مساحتك جاهزة لأول إنجاز", "أضف جلسة دراستك الأولى، وستظهر هنا."],
     yesterday: ["لا توجد جلسات أمس", "يمكنك إضافة جلسة بأمس التاريخ من النموذج."],
@@ -795,7 +801,9 @@
         account: { email: currentUser.email || null },
         dailyGoalMinutes: dailyGoal,
         sessions: exportedSessions,
-        tasks: tasks.map(({ id, title, due_date, done, created_at }) => ({ id, title, due_date, done, created_at })),
+        tasks: tasks.map(({ id, title, due_date, done, priority, recurrence, created_at }) => ({
+          id, title, due_date, done, priority: priority || "normal", recurrence: recurrence || "none", created_at,
+        })),
         weeklyPlan: planItems.map(({ id, title, weekday, start_time, created_at }) => ({ id, title, weekday, start_time, created_at })),
       };
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
@@ -1262,21 +1270,82 @@
   });
 
   // ===== المهام =====
+  const TASK_FIELDS = "id, title, due_date, done, created_at";
+  const TASK_FIELDS_EXTENDED = `${TASK_FIELDS}, priority, recurrence`;
+
+  function normalizeTask(task) {
+    return {
+      ...task,
+      priority: TASK_PRIORITY_WEIGHT[task.priority] !== undefined ? task.priority : "normal",
+      recurrence: TASK_REPEAT_LABEL[task.recurrence] !== undefined ? task.recurrence : "none",
+    };
+  }
+
+  function sortTasks() {
+    tasks.sort((a, b) => {
+      if (Boolean(a.done) !== Boolean(b.done)) return Number(Boolean(a.done)) - Number(Boolean(b.done));
+      const weightDiff = (TASK_PRIORITY_WEIGHT[a.priority] ?? 1) - (TASK_PRIORITY_WEIGHT[b.priority] ?? 1);
+      if (weightDiff !== 0) return weightDiff;
+      const dueA = a.due_date || "9999-12-31";
+      const dueB = b.due_date || "9999-12-31";
+      if (dueA !== dueB) return dueA.localeCompare(dueB);
+      return String(b.created_at || "").localeCompare(String(a.created_at || ""));
+    });
+  }
+
+  function nextRecurringDate(dueDate, recurrence) {
+    const base = new Date(`${dueDate || dateKey()}T00:00:00`);
+    if (Number.isNaN(base.getTime())) return dateKey();
+    if (recurrence === "daily") base.setDate(base.getDate() + 1);
+    else if (recurrence === "weekly") base.setDate(base.getDate() + 7);
+    else if (recurrence === "monthly") {
+      const day = base.getDate();
+      base.setDate(1);
+      base.setMonth(base.getMonth() + 1);
+      const daysInMonth = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+      base.setDate(Math.min(day, daysInMonth));
+    }
+    return dateKey(base);
+  }
+
+  // المهمة المتكررة لا تُغلق أبدًا: تتقدم لموعدها التالي بدل أن تختفي في المنجزات.
+  function rollRecurringTask(task) {
+    const today = dateKey();
+    let next = nextRecurringDate(task.due_date, task.recurrence);
+    let guard = 0;
+    while (next <= today && guard < 400) {
+      next = nextRecurringDate(next, task.recurrence);
+      guard += 1;
+    }
+    return next;
+  }
+
   async function loadTasks() {
-    const { data, error } = await supabaseClient
+    const query = (fields) => supabaseClient
       .from("tasks")
-      .select("id, title, due_date, done, created_at")
+      .select(fields)
       .eq("user_id", currentUser.id)
       .order("done", { ascending: true })
       .order("due_date", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false });
+
+    let { data, error } = await query(TASK_FIELDS_EXTENDED);
+    if (error) {
+      // قاعدة بيانات بلا أعمدة الأولوية والتكرار: نكمل بالوضع الأساسي بدل تعطّل الصفحة.
+      tasksHaveExtras = false;
+      ({ data, error } = await query(TASK_FIELDS));
+    }
     if (error) {
       console.error(error);
       showMessage(taskMessage, `تعذّر تحميل المهام. ${friendlyDbError(error)}`);
       return;
     }
-    tasks = data || [];
+    tasks = (data || []).map(normalizeTask);
+    sortTasks();
     renderTasks();
+    if (!tasksHaveExtras) {
+      showMessage(taskMessage, "لتفعيل الأولويات والتكرار: نفّذ تحديث الأعمدة في setup_supabase.sql.");
+    }
   }
 
   function renderTasks() {
@@ -1284,14 +1353,28 @@
     const openCount = tasks.filter((task) => !task.done).length;
     taskBadge.textContent = `${arabicNumber(openCount)} من ${arabicNumber(tasks.length)}`;
     taskList.innerHTML = tasks.map((task) => {
+      const priority = task.priority || "normal";
+      const repeatLabel = TASK_REPEAT_LABEL[task.recurrence] || "";
+      const tags = [];
+      if (priority === "high") tags.push('<span class="task-tag is-high"><span aria-hidden="true">⚡</span> عالية</span>');
+      if (priority === "low") tags.push('<span class="task-tag is-low">منخفضة</span>');
+      if (repeatLabel && !task.done) tags.push(`<span class="task-tag is-repeat"><span aria-hidden="true">🔁</span> ${escapeHtml(repeatLabel)}</span>`);
       let dueHtml = "";
       if (task.due_date) {
-        const cls = task.due_date < today && !task.done ? " is-overdue" : task.due_date === today && !task.done ? " is-today" : "";
-        dueHtml = `<p class="task-due${cls}">مستحقة: ${escapeHtml(dateShort(task.due_date))}</p>`;
+        let cls = "";
+        let text = `مستحقة · ${dateShort(task.due_date)}`;
+        if (!task.done) {
+          if (task.due_date < today) { cls = " is-overdue"; text = `متأخرة · ${dateShort(task.due_date)}`; }
+          else if (task.due_date === today) { cls = " is-today"; text = "مستحقة اليوم"; }
+        }
+        dueHtml = `<span class="task-due${cls}">${escapeHtml(text)}</span>`;
       }
-      return `<li class="task-item${task.done ? " done" : ""}" data-id="${escapeHtml(task.id)}">
-        <button class="task-check" type="button" aria-label="${task.done ? "إرجاع المهمة إلى قيد العمل" : "إنجاز المهمة"}" aria-pressed="${task.done}">✓</button>
-        <div class="task-body"><p class="task-title">${escapeHtml(task.title)}</p>${dueHtml}</div>
+      if (task.done) tags.push('<span class="task-tag is-finished">منجزة</span>');
+      const meta = (tags.length || dueHtml) ? `<div class="task-meta">${tags.join("")}${dueHtml}</div>` : "";
+      const doneLabel = task.done ? "إرجاع المهمة إلى قيد العمل" : repeatLabel ? "إنجاز هذه المرة" : "إنجاز المهمة";
+      return `<li class="task-item priority-${escapeHtml(priority)}${task.done ? " done" : ""}" data-id="${escapeHtml(task.id)}">
+        <button class="task-check" type="button" aria-label="${doneLabel}" aria-pressed="${task.done}">✓</button>
+        <div class="task-body"><p class="task-title">${escapeHtml(task.title)}</p>${meta}</div>
         <button class="text-action delete task-delete" type="button">حذف</button>
       </li>`;
     }).join("");
@@ -1301,11 +1384,19 @@
   taskForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const title = taskTitleInput.value.trim();
-    const due = taskDueInput.value || null;
+    const priority = TASK_PRIORITY_WEIGHT[taskPriorityInput.value] !== undefined ? taskPriorityInput.value : "normal";
+    const recurrence = TASK_REPEAT_LABEL[taskRepeatInput.value] !== undefined ? taskRepeatInput.value : "none";
+    let due = taskDueInput.value || null;
     if (!title) return showMessage(taskMessage, "اكتب عنوان المهمة أولًا.");
+    if (!due && recurrence !== "none") due = dateKey();
+    const payload = { user_id: currentUser.id, title, due_date: due };
+    if (tasksHaveExtras) {
+      payload.priority = priority;
+      payload.recurrence = recurrence;
+    }
     const { data, error } = await supabaseClient
       .from("tasks")
-      .insert({ user_id: currentUser.id, title, due_date: due })
+      .insert(payload)
       .select()
       .single();
     if (error) {
@@ -1313,11 +1404,18 @@
       console.error(error);
       return;
     }
-    tasks.unshift(data);
+    tasks.unshift(normalizeTask(data));
+    sortTasks();
     renderTasks();
     renderCalendar();
     taskForm.reset();
-    showMessage(taskMessage, "تمت إضافة المهمة إلى قائمتك.", true);
+    taskPriorityInput.value = "normal";
+    taskRepeatInput.value = "none";
+    showMessage(
+      taskMessage,
+      recurrence !== "none" ? `أُضيفت المهمة، وستتكرر ${TASK_REPEAT_LABEL[recurrence]}.` : "تمت إضافة المهمة إلى قائمتك.",
+      true
+    );
   });
 
   taskList.addEventListener("click", async (event) => {
@@ -1327,6 +1425,28 @@
     const task = tasks.find((entry) => entry.id === id);
     if (!task) return;
     if (event.target.closest(".task-check")) {
+      const repeatLabel = TASK_REPEAT_LABEL[task.recurrence] || "";
+      if (tasksHaveExtras && repeatLabel && !task.done) {
+        const nextDue = rollRecurringTask(task);
+        const { data, error } = await supabaseClient
+          .from("tasks")
+          .update({ due_date: nextDue, done: false })
+          .eq("id", id)
+          .eq("user_id", currentUser.id)
+          .select()
+          .single();
+        if (error) {
+          showMessage(taskMessage, `تعذّر تحديث المهمة. ${friendlyDbError(error)}`);
+          console.error(error);
+          return;
+        }
+        tasks = tasks.map((entry) => (entry.id === id ? normalizeTask(data) : entry));
+        sortTasks();
+        renderTasks();
+        renderCalendar();
+        showMessage(taskMessage, `أُنجزت هذه المرة ✦ التكرار القادم: ${dateShort(nextDue)}.`, true);
+        return;
+      }
       const { data, error } = await supabaseClient
         .from("tasks")
         .update({ done: !task.done })
@@ -1339,8 +1459,8 @@
         console.error(error);
         return;
       }
-      tasks = tasks.map((entry) => (entry.id === id ? data : entry));
-      tasks.sort((a, b) => (a.done === b.done ? String(a.due_date || "9").localeCompare(String(b.due_date || "9")) : Number(a.done) - Number(b.done)));
+      tasks = tasks.map((entry) => (entry.id === id ? normalizeTask(data) : entry));
+      sortTasks();
       renderTasks();
       renderCalendar();
       showMessage(taskMessage, data.done ? "أحسنت! أنجزت مهمة جديدة ✦" : "أُعيدت المهمة إلى قيد العمل.", true);
