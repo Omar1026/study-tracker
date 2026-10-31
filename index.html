@@ -15,13 +15,32 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.4l8.5 7.2"/><path d="M5.6 9.6V20a1 1 0 0 0 1 1h3.6v-5.6h3.6V21h3.6a1 1 0 0 0 1-1V9.6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3.1 2.1"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19.5h16"/><path d="M4.8 15.4l4.4-4.6 3.4 3.1 5.9-6.6"/><path d="M14.9 7.3h3.6v3.6"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="4.4" y="4.6" width="15.2" height="15.8" rx="2.6"/><path d="M8.2 12.3l2.3 2.3 5-5.2"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.8" y="5.4" width="16.4" height="14.6" rx="2.6"/><path d="M8 3.4v4M16 3.4v4M3.8 10.2h16.4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4 17 7M7 17l-1.6 1.6"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.4 14.4A8.6 8.6 0 0 1 9.6 3.6a8.6 8.6 0 1 0 10.8 10.8Z"/></symbol>
+    <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 3.4v11.2"/><path d="M7.8 10.6 12 14.8l4.2-4.2"/><path d="M4.2 16.4v1.8a2 2 0 0 0 2 2h11.6a2 2 0 0 0 2-2v-1.8"/></symbol>
+    <symbol id="i-privacy" viewBox="0 0 24 24"><path d="M12 3.2 5 6v5.4c0 4.2 2.8 7.9 7 9.4 4.2-1.5 7-5.2 7-9.4V6l-7-2.8Z"/><path d="M9.2 12.2 11 14l3.9-3.9"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3.4" y="5.4" width="17.2" height="13.2" rx="2.4"/><path d="m4.2 7.2 7.8 6 7.8-6"/></symbol>
+    <symbol id="i-suggestion" viewBox="0 0 24 24"><path d="M20.4 12.6a7.9 7.9 0 0 1-8.4 7.9 8.8 8.8 0 0 1-2.8-.6L4.2 21l1.2-4.9A7.9 7.9 0 1 1 20.4 12.6Z"/><path d="M9 11.8h6M9 14.9h3.6"/></symbol>
+  </svg>
   <main class="page-shell">
     <header class="topbar">
       <a class="brand" href="#home" data-page="home" aria-label="اجتماع النقط - الصفحة الرئيسية"><span class="brand-mark" aria-hidden="true">ن</span><span>اجتماع النقط</span></a>
       <div class="topbar-actions">
         <time class="today-label" id="today-label"></time>
-        <button class="button button-quiet hidden" id="theme-toggle" type="button" aria-label="تبديل المظهر النهاري/الليلي" title="الوضع النهاري / الليلي">☀️/🌙</button>
-        <button class="button button-quiet hidden" id="settings-top" type="button" data-page="settings" aria-label="الإعدادات" title="الإعدادات">⚙</button>
+        <button class="button button-quiet icon-button hidden" id="theme-toggle" type="button" aria-label="تبديل المظهر النهاري/الليلي" title="الوضع النهاري / الليلي" aria-pressed="false">
+          <svg class="icon icon-theme-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+          <svg class="icon icon-theme-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+        </button>
+        <button class="button button-quiet icon-button hidden" id="settings-top" type="button" data-page="settings" aria-label="الإعدادات" title="الإعدادات">
+          <svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg>
+        </button>
         <button class="button button-quiet hidden" id="sign-out" type="button">تسجيل الخروج</button>
       </div>
     </header>
@@ -61,11 +80,11 @@
     </section>
     <div id="student-area" class="hidden">
       <nav class="section-tabs main-navigation" aria-label="التنقل الرئيسي">
-        <button class="section-tab is-active" type="button" data-page="home" aria-current="page"><span aria-hidden="true">⌂</span> الرئيسية</button>
-        <button class="section-tab" type="button" data-page="sessions"><span aria-hidden="true">◷</span> الجلسات</button>
-        <button class="section-tab" type="button" data-page="progress"><span aria-hidden="true">◔</span> تقدمي</button>
-        <button class="section-tab" type="button" data-page="tasks"><span aria-hidden="true">☑</span> المهام</button>
-        <button class="section-tab" type="button" data-page="planner"><span aria-hidden="true">▦</span> التخطيط</button>
+        <button class="section-tab is-active" type="button" data-page="home" aria-current="page"><svg class="icon nav-icon" aria-hidden="true"><use href="#i-home"/></svg> <span class="nav-label">الرئيسية</span></button>
+        <button class="section-tab" type="button" data-page="sessions"><svg class="icon nav-icon" aria-hidden="true"><use href="#i-clock"/></svg> <span class="nav-label">الجلسات</span></button>
+        <button class="section-tab" type="button" data-page="progress"><svg class="icon nav-icon" aria-hidden="true"><use href="#i-chart"/></svg> <span class="nav-label">تقدمي</span></button>
+        <button class="section-tab" type="button" data-page="tasks"><svg class="icon nav-icon" aria-hidden="true"><use href="#i-tasks"/></svg> <span class="nav-label">المهام</span></button>
+        <button class="section-tab" type="button" data-page="planner"><svg class="icon nav-icon" aria-hidden="true"><use href="#i-calendar"/></svg> <span class="nav-label">التخطيط</span></button>
       </nav>
       <div class="app-page" id="home-page">
         <section class="home-top animate-in">
@@ -82,6 +101,10 @@
                 </span>
               </button>
             </div>
+            <button class="install-chip hidden" type="button" id="install-home">
+              <svg class="icon" aria-hidden="true"><use href="#i-install"/></svg>
+              <span>ثبّت التطبيق على جهازك</span>
+            </button>
           </div>
 
           <aside class="home-today" aria-labelledby="home-today-title">
@@ -338,7 +361,7 @@
       </div>
       <div class="app-page hidden" id="settings-page">
         <section class="panel settings-panel" aria-labelledby="settings-heading">
-          <div class="panel-heading"><div><p class="eyebrow">خصص تجربتك</p><h2 id="settings-heading">إعدادات المظهر</h2></div><span class="heading-icon" aria-hidden="true">⚙</span></div>
+          <div class="panel-heading"><div><p class="eyebrow">خصص تجربتك</p><h2 id="settings-heading">إعدادات المظهر</h2></div><span class="heading-icon heading-icon-svg" aria-hidden="true"><svg class="icon"><use href="#i-settings"/></svg></span></div>
           <fieldset class="setting-group"><legend>لون التطبيق</legend><p class="setting-help">اختر لونًا صافيًا يميز الأزرار والعناصر الرئيسية.</p><div class="color-options">
             <button class="color-swatch" type="button" data-accent="teal" aria-label="أخضر تركوازي" title="أخضر تركوازي"></button><button class="color-swatch" type="button" data-accent="blue" aria-label="أزرق" title="أزرق"></button><button class="color-swatch" type="button" data-accent="purple" aria-label="بنفسجي" title="بنفسجي"></button><button class="color-swatch" type="button" data-accent="green" aria-label="أخضر" title="أخضر"></button><button class="color-swatch" type="button" data-accent="gold" aria-label="ذهبي" title="ذهبي"></button><button class="color-swatch" type="button" data-accent="orange" aria-label="برتقالي" title="برتقالي"></button><button class="color-swatch" type="button" data-accent="indigo" aria-label="نيلي" title="نيلي"></button><button class="color-swatch" type="button" data-accent="sky" aria-label="أزرق سماوي" title="أزرق سماوي"></button><button class="color-swatch" type="button" data-accent="rose" aria-label="وردي داكن" title="وردي داكن"></button>
           </div></fieldset>
@@ -349,9 +372,9 @@
           <fieldset class="setting-group data-tools"><legend>بياناتك</legend><p class="setting-help">النسخة تتضمن بريد الحساب وجلساتك ومهامك وخطتك وهدفك اليومي، وتُنزّل إلى هذا الجهاز.</p><button class="button button-quiet" type="button" id="export-account-data">تنزيل نسخة من بياناتي</button><p class="setting-help">لطلب حذف الحساب والبيانات المرتبطة به، راسل المطوّر من بريد الحساب.</p><a class="text-action" id="delete-account-request" href="mailto:alathry18@gmail.com?subject=%D8%B7%D9%84%D8%A8%20%D8%AD%D8%B0%D9%81%20%D8%A7%D9%84%D8%AD%D8%B3%D8%A7%D8%A8%20%D9%88%D8%A7%D9%84%D8%A8%D9%8A%D8%A7%D9%86%D8%A7%D8%AA">طلب حذف الحساب والبيانات</a></fieldset>
 
           <fieldset class="setting-group settings-install"><legend>التطبيق</legend>
-            <button class="button button-quiet install-once-btn" type="button" id="install-settings-btn" aria-label="تثبيت التطبيق على هذا الجهاز">⬇ تثبيت «اجتماع النقط»</button>
-            <p class="setting-help">يظهر هذا الزر مرة واحدة حتى تثبيت التطبيق، ثم يختفي تلقائيًا.</p>
-            <button class="button text-action privacy-btn" type="button" id="privacy-open-btn" aria-label="اقرأ بيان الخصوصية">📄 بيان الخصوصية</button>
+            <button class="button button-quiet install-once-btn" type="button" id="install-settings-btn" aria-label="تثبيت التطبيق على هذا الجهاز"><svg class="icon" aria-hidden="true"><use href="#i-install"/></svg> تثبيت «اجتماع النقط»</button>
+            <p class="setting-help">ثبّت التطبيق ليفتح بملء الشاشة ويعمل دون اتصال، بخطوة واحدة.</p>
+            <button class="button text-action privacy-btn" type="button" id="privacy-open-btn" aria-label="اقرأ بيان الخصوصية"><svg class="icon" aria-hidden="true"><use href="#i-privacy"/></svg> بيان الخصوصية</button>
           </fieldset>
         </section>
       </div>
@@ -413,7 +436,25 @@
         <p>للاستفسار أو طلب الخصوصية: <a href="mailto:alathry18@gmail.com">alathry18@gmail.com</a>.</p>
       </div>
     </div>
-    <footer><p>كل دقيقة تركيز تصنع فرقًا <span aria-hidden="true">✦</span></p><p class="footer-credit">تطوير: أبو عمر الأثري · <a href="mailto:alathry18@gmail.com">alathry18@gmail.com</a> · <a href="https://github.com/Omar1026/study-tracker/issues/new" target="_blank" rel="noopener noreferrer">أرسل ملاحظة أو اقتراحًا</a></p></footer>
+    <footer class="site-footer">
+      <p class="footer-motto">كل دقيقة تركيز تصنع فرقًا <span aria-hidden="true">✦</span></p>
+      <div class="footer-links">
+        <button class="footer-link" type="button" id="privacy-open-footer">
+          <svg class="icon" aria-hidden="true"><use href="#i-privacy"/></svg>
+          <span>الخصوصية</span>
+        </button>
+        <span class="footer-sep" aria-hidden="true"></span>
+        <span class="footer-dev">أبو عمر المدني الأثري</span>
+        <span class="footer-sep" aria-hidden="true"></span>
+        <a class="footer-link" href="mailto:alathry18@gmail.com">
+          <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>
+          <span>alathry18@gmail.com</span>
+        </a>
+      </div>
+      <p class="footer-suggestion">
+        <a href="https://github.com/Omar1026/study-tracker/issues/new" target="_blank" rel="noopener noreferrer">أرسل اقتراحًا أو ملاحظة</a>
+      </p>
+    </footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js" integrity="sha384-UagCvVPT5XXA0Hx+nJYUAGBFseHT9zBgpJMSebsAxl9lciTwbT+39j5VfRjdP5Tp" crossorigin="anonymous"></script>
   <script src="supabase-config.js"></script>

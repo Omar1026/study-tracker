@@ -63,6 +63,7 @@
   // الإعدادات
   const installSettingsBtn = document.querySelector("#install-settings-btn");
   const privacyOpenBtn = document.querySelector("#privacy-open-btn");
+  const privacyOpenFooter = document.querySelector("#privacy-open-footer");
   const privacyModal = document.querySelector("#privacy-modal");
   const privacyClose = document.querySelector("#privacy-close");
 
@@ -254,6 +255,8 @@
     root.style.setProperty("--font-ui", ARABIC_FONTS[appearance.font] || ARABIC_FONTS.ibm);
     root.style.setProperty("--root-font-size", (16 * appearance.fontScale) + "px");
     document.body.dataset.theme = appearance.theme;
+    themeToggle.setAttribute("aria-pressed", String(appearance.theme === "night"));
+    themeToggle.title = appearance.theme === "night" ? "التبديل إلى الوضع النهاري" : "التبديل إلى الوضع الليلي";
     document.body.classList.add("solid-colors");
     document.querySelector("#theme-color-meta").content = appearance.theme === "night" ? "#111b17" : palette.main;
     fontSelect.value = appearance.font;
@@ -1659,7 +1662,6 @@
   loadAppearance();
   applyAppearance();
   initPomodoro();
-  themeToggle.textContent = appearance.theme === "night" ? "🌙" : "☀️";
   document.querySelector("#auth-forgot").addEventListener("click", handleForgotPassword);
   authForm.addEventListener("submit", handleAuth);
   recoveryForm.addEventListener("submit", handleRecovery);
@@ -1685,11 +1687,14 @@
     appearance.theme = appearance.theme === "night" ? "day" : "night";
     themeSelect.value = appearance.theme;
     saveAppearance();
-    themeToggle.textContent = appearance.theme === "night" ? "🌙" : "☀️";
   });
 
   // فتح وإغلاق نافذة بيان الخصوصية
   privacyOpenBtn.addEventListener("click", () => {
+    privacyModal.classList.remove("hidden");
+    privacyClose.focus();
+  });
+  privacyOpenFooter.addEventListener("click", () => {
     privacyModal.classList.remove("hidden");
     privacyClose.focus();
   });
@@ -1769,45 +1774,45 @@
 
   // ===== زر تثبيت التطبيق (PWA) =====
   const installButton = document.querySelector("#install-settings-btn");
+  const installHomeButton = document.querySelector("#install-home");
   const installModal = document.querySelector("#install-modal");
   const installClose = document.querySelector("#install-close");
   const installNow = document.querySelector("#install-now");
   const installSteps = document.querySelector("#install-steps");
   let deferredInstallPrompt = null;
 
+  const installButtons = [installButton, installHomeButton].filter(Boolean);
   const isInstalledApp = () => window.matchMedia?.("(display-mode: standalone)")?.matches === true
     || navigator.standalone === true;
   let installCompleted = isInstalledApp();
-  try {
-    installCompleted = installCompleted || localStorage.getItem("study-tracker-installed") === "true";
-  } catch (error) {
-    console.warn("تعذر قراءة حالة التثبيت المحفوظة.", error);
+
+  function setInstallVisible(visible) {
+    installButtons.forEach((button) => button.classList.toggle("hidden", !visible));
+    document.body.classList.toggle("is-installed-app", !visible);
   }
+
   if (installCompleted) {
-    installButton.classList.add("hidden");
-    if (isInstalledApp()) {
-      try {
-        localStorage.setItem("study-tracker-installed", "true");
-      } catch (error) {
-        console.warn("تعذر حفظ حالة التثبيت.", error);
-      }
+    try {
+      localStorage.setItem("study-tracker-installed", "true");
+    } catch (error) {
+      console.warn("تعذر حفظ حالة التثبيت.", error);
     }
   }
-  else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) installButton.classList.remove("hidden");
+  setInstallVisible(!installCompleted);
 
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     if (installCompleted) return;
     deferredInstallPrompt = event;
-    installButton.classList.remove("hidden");
-    installButton.classList.add("can-install");
+    setInstallVisible(true);
+    installButtons.forEach((button) => button.classList.add("can-install"));
   });
 
   window.addEventListener("appinstalled", () => {
     installCompleted = true;
     deferredInstallPrompt = null;
-    installButton.classList.add("hidden");
-    installButton.classList.remove("can-install");
+    setInstallVisible(false);
+    installButtons.forEach((button) => button.classList.remove("can-install"));
     installModal.classList.add("hidden");
     try {
       localStorage.setItem("study-tracker-installed", "true");
@@ -1857,6 +1862,7 @@
   }
 
   installButton.addEventListener("click", openInstallModal);
+  installHomeButton?.addEventListener("click", openInstallModal);
   installClose.addEventListener("click", closeInstallModal);
   installModal.addEventListener("click", (event) => {
     if (event.target === installModal) closeInstallModal();
@@ -1873,7 +1879,7 @@
     const choice = await installPrompt.userChoice;
     if (choice?.outcome === "accepted") {
       installCompleted = true;
-      installButton.classList.add("hidden");
+      setInstallVisible(false);
       try {
         localStorage.setItem("study-tracker-installed", "true");
       } catch (error) {
@@ -1882,7 +1888,7 @@
     }
     deferredInstallPrompt = null;
     installNow.disabled = false;
-    installButton.classList.remove("can-install");
+    installButtons.forEach((button) => button.classList.remove("can-install"));
     closeInstallModal();
   });
 

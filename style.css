@@ -48,6 +48,14 @@ body {
 
 .page-shell { max-width: 1120px; margin: auto; padding: 26px 34px 22px; }
 
+/* ===== الأيقونات (SVG موحّد) ===== */
+.icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.icon {
+  width: 22px; height: 22px; flex: 0 0 auto;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
 .topbar { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
 .topbar-actions { display: flex; align-items: center; gap: 14px; }
 
@@ -150,7 +158,8 @@ body {
 .app-page { display: grid; gap: 20px; }
 .app-page.hidden { display: none !important; }
 .main-navigation .section-tab { flex-direction: column; gap: 2px; padding: 9px 5px; }
-.main-navigation .section-tab span { font-size: 1.3em; line-height: 1.2; }
+.main-navigation .section-tab .nav-icon { width: 24px; height: 24px; }
+.main-navigation .section-tab .nav-label { line-height: 1.2; }
 .home-welcome h2 { margin: 0; color: var(--teal-dark); }
 .home-welcome > p:not(.eyebrow) { margin: 5px 0 16px; color: var(--muted); }
 .home-shortcuts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -196,7 +205,6 @@ body[data-theme="night"] .cal-cell.heat-2, body[data-theme="night"] .legend-swat
 body[data-theme="night"] .cal-cell.heat-3, body[data-theme="night"] .legend-swatch.heat-3 { background: #3b765d; }
 body[data-theme="night"] .setup-note { background: #3c3421; color: #f0dba4; }
 body[data-theme="night"] .demo-notice { border-color: #67552c; background: #3c3421; color: #f0dba4; }
-body[data-theme="night"] .footer-credit a { color: var(--teal-dark); }
 
 /* ===== اللوحات العامة ===== */
 .content-grid { display: grid; grid-template-columns: minmax(300px, .87fr) minmax(0, 1.35fr); gap: 20px; align-items: start; }
@@ -207,6 +215,7 @@ body[data-theme="night"] .footer-credit a { color: var(--teal-dark); }
   display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px;
   background: var(--teal-soft); color: var(--teal); font-size: 1.3125rem;
 }
+.heading-icon-svg .icon { width: 19px; height: 19px; }
 .sessions-heading { margin-bottom: 15px; }
 .heading-tools { display: flex; align-items: center; gap: 10px; }
 .count-badge { border: 1px solid var(--line); border-radius: 30px; padding: 4px 10px; color: var(--muted); font-size: 0.75rem; background: var(--canvas); }
@@ -323,7 +332,30 @@ textarea { resize: vertical; min-height: 79px; }
 .how-to-content li { margin-top: 4px; }
 .demo-open { width: 100%; margin-top: 12px; border: 1px solid var(--line); }
 
-footer { padding-top: 28px; text-align: center; color: #9aa49e; font-size: 0.71875rem; }
+.site-footer {
+  margin-top: 30px;
+  padding: 26px 0 8px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.footer-motto { margin: 0 0 12px; color: var(--ink); font-size: 0.8125rem; }
+.footer-motto span { color: var(--gold); }
+.footer-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; }
+.footer-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 2px; border: 0; background: none;
+  color: var(--teal-dark); font: inherit; font-size: 0.78125rem;
+  text-decoration: none; cursor: pointer;
+}
+.footer-link .icon { width: 15px; height: 15px; stroke-width: 1.6; }
+.footer-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.footer-dev { font-size: 0.78125rem; font-weight: 600; color: var(--ink); }
+.footer-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--line); }
+.footer-suggestion { margin: 9px 0 0; font-size: 0.6875rem; color: var(--muted); }
+.footer-suggestion a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.footer-suggestion a:hover { color: var(--teal); }
 .privacy-policy { max-width: 760px; margin: 16px auto 0; text-align: right; color: var(--muted); }
 .privacy-policy summary { display: inline-block; padding: 8px 12px; border: 1px solid var(--line); border-radius: 9px; color: var(--teal); cursor: pointer; font-weight: 700; }
 .privacy-content { margin-top: 10px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); line-height: 1.9; }
@@ -335,10 +367,9 @@ footer { padding-top: 28px; text-align: center; color: #9aa49e; font-size: 0.718
 .data-tools .button { margin-top: 12px; }
 .data-tools .setting-help { margin-top: 9px; }
 .data-tools a { display: inline-block; margin-top: 7px; color: var(--teal); }
-footer p { margin: 3px 0; }
-footer span { color: var(--gold); }
-.footer-credit a { color: var(--teal); text-decoration: none; }
-.footer-credit a:hover { text-decoration: underline; }
+body[data-theme="night"] .footer-link,
+body[data-theme="night"] .footer-suggestion a:hover { color: var(--gold); }
+body[data-theme="night"] .footer-sep { background: var(--line); }
 .demo-area { max-width: 900px; margin: 0 auto 28px; }
 .demo-notice { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; padding: 12px 15px; border: 1px solid #e8d6a9; border-radius: 13px; background: var(--gold-soft); color: #705824; font-size: 0.75rem; }
 .demo-notice strong { color: #5c471b; }
@@ -672,13 +703,21 @@ h1, h2, h3 {
 }
 .onboarding-skip:hover { color: var(--teal); text-decoration: underline; }
 
-/* تحسين أزرار الشريط العلوي */
-#theme-toggle, #settings-top {
-  font-size: 1.2rem;
-  padding: 8px 10px;
-  border-radius: 10px;
+/* ===== أيقونات الشريط العلوي ===== */
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 12px;
 }
-#theme-toggle:hover, #settings-top:hover { background: var(--canvas); color: var(--teal); }
+.icon-button .icon { width: 20px; height: 20px; }
+.icon-theme-sun { display: none; }
+body[data-theme="night"] .icon-theme-sun { display: block; }
+body[data-theme="night"] .icon-theme-moon { display: none; }
+.icon-button:hover .icon { transform: scale(1.06); }
+.icon-button .icon { transition: transform .18s ease; }
 
 @media (max-width: 760px) {
   .home-grid { grid-template-columns: 1fr; gap: 12px; }
@@ -798,6 +837,32 @@ h1, h2, h3 {
   font-weight: 700;
 }
 .privacy-btn:hover { background: var(--teal); color: #fff; }
+.install-once-btn .icon { width: 17px; height: 17px; }
+.privacy-btn { display: inline-flex; align-items: center; gap: 7px; }
+.privacy-btn .icon { width: 16px; height: 16px; }
+
+/* زر التثبيت في الصفحة الرئيسية */
+.install-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 15px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--teal-dark);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .18s ease, color .18s ease, background .18s ease;
+}
+.install-chip .icon { width: 17px; height: 17px; }
+.install-chip:hover { border-color: var(--teal); color: var(--teal); }
+.install-chip.can-install { background: var(--teal); border-color: var(--teal); color: #fff; }
+.install-chip.can-install:hover { background: var(--teal-dark); border-color: var(--teal-dark); }
+body[data-theme="night"] .install-chip:not(.can-install) { background: var(--paper); color: var(--gold); }
 
 /* نافذة بيان الخصوصية (مودال) */
 .privacy-modal {
@@ -878,7 +943,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   #sign-out { grid-column: 2; grid-row: 1; justify-self: end; font-size: 0.65rem; padding: 6px 8px; }
   #theme-toggle { grid-column: 3; grid-row: 1; }
   #settings-top { grid-column: 4; grid-row: 1; }
-  #theme-toggle, #settings-top { font-size: 1.05rem; padding: 6px 8px; }
+  #theme-toggle, #settings-top { width: 34px; height: 34px; border-radius: 10px; }
+  #theme-toggle .icon, #settings-top .icon { width: 18px; height: 18px; }
 
   /* العنوان والبيت */
   .home-hero { padding: 22px 0 6px; }
@@ -920,7 +986,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   }
   .main-navigation::-webkit-scrollbar { display: none; }
   .main-navigation .section-tab { flex: 1 0 auto; min-width: 54px; padding: 7px 2px; font-size: 0.6875rem; gap: 1px; border-radius: 10px; }
-  .main-navigation .section-tab span { font-size: 1.15em; }
+  .main-navigation .section-tab .nav-icon { width: 21px; height: 21px; }
   body.app-mode .page-shell { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
 
   /* الصفحات الأخرى */
@@ -1197,8 +1263,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     gap: 4px;
     border-radius: 16px;
   }
-  .main-navigation .section-tab { flex: 0 1 120px; gap: 5px; padding: 9px 12px; font-size: .8125rem; }
-  .main-navigation .section-tab span { font-size: 1.05em; }
+  .main-navigation .section-tab { flex-direction: row; flex: 0 1 120px; gap: 6px; padding: 9px 12px; font-size: .8125rem; }
+  .main-navigation .section-tab .nav-icon { width: 18px; height: 18px; }
+  .main-navigation .section-tab .nav-label { font-weight: 600; }
 }
 
 /* ===== المهام: الأولويات والتكرار ===== */
