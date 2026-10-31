@@ -15,7 +15,7 @@
   --shadow: 0 18px 50px rgba(14, 92, 84, .07);
   --radius: 18px;
   --font-ui: "IBM Plex Sans Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif;
-  --font-poem: "Aref Ruqaa", "Traditional Arabic", serif;
+  --font-poem: var(--font-ui);
 }
 html { font-size: var(--root-font-size, 16px); }
 body[data-theme="night"] {
@@ -68,9 +68,9 @@ body {
 /* ===== بيت الشعر في إطار مزخرف ===== */
 .poem-card {
   position: relative;
-  max-width: 640px;
-  margin: 4px auto 30px;
-  padding: 30px 34px 24px;
+  max-width: 760px;
+  margin: 0 auto 24px;
+  padding: 24px 28px 18px;
   text-align: center;
   background: var(--gold-soft);
   border: 1.5px solid rgba(185, 138, 47, .45);
@@ -520,15 +520,10 @@ footer span { color: var(--gold); }
   .week-grid { grid-template-columns: 1fr; }
 }
 
-/* ===== خط عربي للعناوين ===== */
+/* ===== خط عربي موحّد لكل النصوص ===== */
 h1, h2, h3 {
-  font-family: "Aref Ruqaa", "Traditional Arabic", serif;
+  font-family: var(--font-ui);
   font-weight: 700;
-}
-.home-hero h1,
-.poem-verse,
-.poem-caption {
-  font-family: "Aref Ruqaa", "Traditional Arabic", serif;
 }
 
 /* ===== رسوم متحركة عند الدخول ===== */
@@ -546,7 +541,6 @@ h1, h2, h3 {
 .home-hero { animation: fadeIn 0.8s ease both; }
 .poem-card { animation: fadeInUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .home-grid { animation: fadeInUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.home-quick { animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
 /* أيقونات البطاقات ثلاثية ملونة */
 .home-card .card-icon {
@@ -563,34 +557,6 @@ h1, h2, h3 {
 .icon-study { background: #ffecd9; color: #d97706; }
 .icon-tasks { background: #dcfce7; color: #15803d; }
 .icon-plan  { background: #dbeafe; color: #1d4ed8; }
-
-/* ===== الملخص السريع ليومك ===== */
-.home-quick {
-  margin: 26px 0 10px;
-}
-.quick-card {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 20px 24px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  box-shadow: var(--shadow);
-}
-.quick-icon {
-  width: 48px; height: 48px;
-  border-radius: 14px;
-  background: var(--teal-soft);
-  color: var(--teal);
-  display: grid; place-items: center;
-  font-size: 1.6rem;
-  flex: 0 0 auto;
-}
-.quick-body { min-width: 0; }
-.quick-label { margin: 0 0 4px; color: var(--muted); font-size: 0.8rem; font-weight: 700; }
-.quick-value { margin: 0 0 3px; color: var(--ink); font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-.quick-hint { margin: 0; color: var(--muted); font-size: 0.75rem; }
 
 /* ===== شاشة الترحيب (Onboarding) ===== */
 .onboarding-modal {
@@ -720,7 +686,6 @@ h1, h2, h3 {
   .home-card .card-icon { font-size: 2rem; width: 52px; height: 52px; }
   .home-card h3 { font-size: 1.05rem; }
   .home-hero { padding: 30px 0 10px; }
-  .quick-card { flex-direction: column; align-items: stretch; text-align: center; gap: 14px; }
   .onboarding-card { padding: 26px 22px 22px; }
   .onboarding-page h3 { font-size: 1.2rem; }
 }
@@ -730,10 +695,10 @@ h1, h2, h3 {
   .animate-in { animation: none; opacity: 1; }
 }
 .home-hero {
-  text-align: center;
-  padding: 46px 0 14px;
-  max-width: 720px;
-  margin: 0 auto;
+  text-align: start;
+  padding: 26px 0 6px;
+  max-width: none;
+  margin: 0;
 }
 .home-hero .eyebrow {
   color: var(--gold);
@@ -744,12 +709,12 @@ h1, h2, h3 {
   margin: 0 0 10px;
 }
 .home-hero h1 {
-  font-size: clamp(2rem, 6vw, 3.25rem);
+  font-size: clamp(2rem, 5vw, 3rem);
   margin: 0 0 12px;
   color: var(--teal-dark);
   line-height: 1.2;
   letter-spacing: -0.02em;
-  font-weight: 800;
+  font-weight: 700;
 }
 .home-subtitle {
   color: var(--muted);
@@ -764,7 +729,7 @@ h1, h2, h3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  margin: 26px 0 10px;
+  margin: 0;
 }
 .home-card {
   display: flex;
@@ -792,7 +757,7 @@ h1, h2, h3 {
   margin: 0 0 6px;
   font-size: 1.15rem;
   color: var(--teal-dark);
-  font-weight: 800;
+  font-weight: 700;
 }
 .home-card p {
   margin: 0;
@@ -889,8 +854,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 /* ===== تجاوب الصفحة الرئيسية (يجب أن يبقى في نهاية الملف) ===== */
 @media (max-width: 900px) {
-  .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-card:last-child { grid-column: 1 / -1; }
+  .home-top { grid-template-columns: 1fr; }
+  .home-top .home-hero { padding: 16px 0 2px; }
+  .home-top .home-cta { max-width: none; }
+  .home-tools .home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -925,20 +892,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .poem-caption { margin-top: 10px; padding-top: 9px; font-size: 0.7rem; }
 
   /* بطاقات الأقسام: عمود واحد مريح */
-  .home-grid { grid-template-columns: 1fr; gap: 11px; margin: 10px 0 8px; }
+  .home-grid { grid-template-columns: 1fr; gap: 11px; margin: 0; }
   .home-card, .home-card:last-child { grid-column: auto; padding: 15px 16px; gap: 13px; border-radius: 18px; }
   .home-card .card-icon { width: 46px; height: 46px; border-radius: 14px; font-size: 1.45rem; }
   .home-card h3 { font-size: 1rem; margin-bottom: 3px; }
   .home-card p { font-size: 0.84rem; line-height: 1.6; }
   .home-card .card-arrow { font-size: 1.05rem; }
-
-  /* الملخص السريع */
-  .home-quick { margin: 18px 0 8px; }
-  .quick-card { flex-direction: row; align-items: center; text-align: start; gap: 12px; padding: 14px 16px; border-radius: 16px; }
-  .quick-icon { width: 42px; height: 42px; border-radius: 12px; font-size: 1.3rem; }
-  .quick-label { font-size: 0.72rem; margin-bottom: 2px; }
-  .quick-value { font-size: 1.15rem; }
-  .quick-hint { font-size: 0.75rem; }
 
   /* شريط تنقل سفلي ثابت */
   .main-navigation {
@@ -985,7 +944,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .home-card p { font-size: 0.8rem; }
   .home-card .card-arrow { display: none; }
   .main-navigation .section-tab { min-width: 52px; font-size: 0.625rem; }
-  .quick-hint { font-size: 0.72rem; }
 }
 
 /* ===== زر البدء السريع ===== */
@@ -1118,3 +1076,127 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .pomodoro-notify { order: 7; margin-top: 2px; font-size: 0.75rem; }
 }
 
+
+/* ===== الصفحة الرئيسية: صف الترحيب وملخص اليوم ===== */
+.home-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 22px;
+  align-items: stretch;
+  margin-bottom: 22px;
+}
+.home-top .home-cta { max-width: 330px; margin: 18px 0 0; }
+
+.home-today {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 22px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+.home-today-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 0; }
+.home-today-head h2 { margin: 0; font-size: 1.1rem; color: var(--teal-dark); letter-spacing: -.01em; }
+.home-today-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 0; border: 0; background: none;
+  color: var(--teal-dark); font: inherit; font-size: .8125rem; font-weight: 700;
+  white-space: nowrap; cursor: pointer;
+}
+.home-today-link:hover { text-decoration: underline; }
+.home-today-body { display: flex; align-items: center; gap: 18px; margin-top: 0; }
+.today-ring {
+  --today-progress: 0%;
+  position: relative;
+  flex: 0 0 auto;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: conic-gradient(var(--teal-dark) var(--today-progress), var(--teal-soft) 0);
+  display: grid;
+  place-items: center;
+}
+.today-ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--paper); }
+.today-ring.is-complete { background: conic-gradient(var(--gold) var(--today-progress), var(--gold-soft) 0); }
+.today-ring-face { position: relative; z-index: 1; display: grid; justify-items: center; line-height: 1.15; text-align: center; }
+.today-ring-face strong { font-size: 1.5rem; font-weight: 700; color: var(--teal-dark); font-variant-numeric: tabular-nums; }
+.today-ring-face span { font-size: .7rem; color: var(--muted); font-weight: 600; }
+.home-today-info { display: grid; gap: 8px; min-width: 0; }
+.home-today-goal { margin: 0; font-size: .875rem; font-weight: 700; color: var(--ink); }
+.home-today-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.today-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--canvas); color: var(--muted); font-size: .75rem; }
+.today-chip strong { color: var(--teal-dark); font-size: .8125rem; }
+.home-today-hint { margin: 0; color: var(--muted); font-size: .8125rem; line-height: 1.6; }
+
+/* ===== أدواتك: البطاقات الثلاث ===== */
+.home-tools { margin-top: 2px; }
+.home-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.home-section-head .eyebrow { margin-bottom: 3px; }
+.home-section-head h2 { margin: 0; font-size: clamp(1.2rem, 2.4vw, 1.45rem); color: var(--teal-dark); letter-spacing: -.01em; }
+.home-tools .home-card {
+  position: relative;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 20px;
+}
+.home-tools .home-card .card-body { text-align: start; }
+.home-tools .home-card h3 { margin-bottom: 4px; }
+.home-tools .home-card .card-icon { font-size: 1.7rem; }
+.home-tools .home-card .card-arrow {
+  position: absolute;
+  inset-inline-end: 18px;
+  top: 20px;
+  font-size: 1.1rem;
+  color: var(--line);
+}
+.home-tools .home-card:hover .card-arrow { color: var(--teal); transform: translateX(-4px); }
+
+@media (max-width: 900px) {
+  .home-top { grid-template-columns: 1fr; }
+  .home-top .home-hero { padding: 12px 0 2px; }
+  .home-top .home-cta { max-width: none; }
+  .home-today-body { gap: 14px; }
+  .today-ring { width: 96px; height: 96px; }
+}
+
+@media (max-width: 760px) {
+  .home-top { gap: 16px; margin-bottom: 18px; }
+  .home-today { padding: 16px 18px; border-radius: 18px; }
+  .home-today-head { margin-bottom: 12px; }
+  .home-today-head h2 { font-size: 1.05rem; }
+  .home-today-body { gap: 14px; }
+  .today-ring { width: 92px; height: 92px; }
+  .today-ring::before { inset: 8px; }
+  .today-ring-face strong { font-size: 1.45rem; }
+  .home-tools .home-card { padding: 15px 16px; gap: 10px; border-radius: 18px; }
+  .home-tools .home-card .card-arrow { top: 15px; inset-inline-end: 14px; }
+  .home-section-head { margin-bottom: 11px; }
+  .home-section-head h2 { font-size: 1.15rem; }
+}
+
+@media (max-width: 390px) {
+  .home-today { padding: 14px 15px; }
+  .home-today-body { gap: 12px; }
+  .today-ring { width: 84px; height: 84px; }
+  .today-ring-face strong { font-size: 1.35rem; }
+  .home-today-goal { font-size: .8125rem; }
+  .home-today-hint, .today-chip { font-size: .7rem; }
+}
+
+/* ===== شريط التنقل في الشاشات الكبيرة: مدمج ومتمركز ===== */
+@media (min-width: 761px) {
+  .main-navigation {
+    max-width: 620px;
+    margin: 0 auto 18px;
+    padding: 5px;
+    gap: 4px;
+    border-radius: 16px;
+  }
+  .main-navigation .section-tab { flex: 0 1 120px; gap: 5px; padding: 9px 12px; font-size: .8125rem; }
+  .main-navigation .section-tab span { font-size: 1.05em; }
+}

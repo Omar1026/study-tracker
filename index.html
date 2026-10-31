@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -68,10 +68,47 @@
         <button class="section-tab" type="button" data-page="planner"><span aria-hidden="true">▦</span> التخطيط</button>
       </nav>
       <div class="app-page" id="home-page">
-        <section class="home-hero animate-in" aria-labelledby="home-title">
-          <p class="eyebrow">نظام متكامل لمتابعة دراستك</p>
-          <h1 id="home-title">اجتماع النقط</h1>
-          <p class="home-subtitle">سجّل جلسات دراستك، ونظّم مهامك، وخطط لأسبوعك، وتابع تقدّمك خطوة بخطوة.</p>
+        <section class="home-top animate-in">
+          <div class="home-hero" aria-labelledby="home-title">
+            <p class="eyebrow">نظام متكامل لمتابعة دراستك</p>
+            <h1 id="home-title">اجتماع النقط</h1>
+            <p class="home-subtitle">سجّل جلساتك، نظّم مهامك، وتابع تقدّمك خطوة بخطوة.</p>
+            <div class="home-cta">
+              <button class="quick-start-btn" type="button" id="quick-start-btn">
+                <span class="quick-start-icon" aria-hidden="true">▶</span>
+                <span class="quick-start-text">
+                  <strong>ابدأ جلسة الآن</strong>
+                  <small>انتقل مباشرة لتسجيل وقت مذاكرتك</small>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <aside class="home-today" aria-labelledby="home-today-title">
+            <div class="home-today-head">
+              <div>
+                <p class="eyebrow">ملخص اليوم</p>
+                <h2 id="home-today-title">وقت دراستك</h2>
+              </div>
+              <button class="home-today-link" type="button" data-page="progress">تقدمي <span aria-hidden="true">←</span></button>
+            </div>
+            <div class="home-today-body">
+              <div class="today-ring" id="today-ring" role="img" aria-label="نسبة إنجاز هدفك اليومي">
+                <div class="today-ring-face">
+                  <strong id="home-today-minutes">٠</strong>
+                  <span>دقيقة</span>
+                </div>
+              </div>
+              <div class="home-today-info">
+                <p class="home-today-goal" id="home-today-goal">هدفك اليومي ١٢٠ دقيقة</p>
+                <div class="home-today-meta">
+                  <span class="today-chip"><strong id="home-today-sessions">٠</strong> جلسات</span>
+                  <span class="today-chip"><strong id="home-today-streak">٠</strong> أيام متتابعة</span>
+                </div>
+                <p class="home-today-hint" id="home-today-hint">ابدأ جلستك الأولى اليوم.</p>
+              </div>
+            </div>
+          </aside>
         </section>
 
         <section class="poem-card animate-in" aria-label="بيت من الشعر في طلب العلم">
@@ -84,51 +121,38 @@
           <p class="poem-caption">لا تحقرن صغيرةً <span aria-hidden="true">*</span> إن الجبال من الحصى</p>
         </section>
 
-        <section class="home-grid animate-in" aria-label="الأقسام الرئيسية">
-          <button type="button" class="home-card" data-page="sessions" aria-label="سجل جلسة دراسة جديدة">
-            <span class="card-icon icon-study">📖</span>
-            <div class="card-body">
-              <h3>سجلات الدراسة</h3>
-              <p>سجّل وقت مذاكرتك، المادة، المدة والملاحظات لكل جلسة.</p>
+        <section class="home-tools animate-in" aria-labelledby="home-tools-title">
+          <div class="home-section-head">
+            <div>
+              <p class="eyebrow">أدواتك</p>
+              <h2 id="home-tools-title">كل ما تحتاجه في مكان واحد</h2>
             </div>
-            <span class="card-arrow">→</span>
-          </button>
-          <button type="button" class="home-card" data-page="tasks" aria-label="إدارة المهام اليومية">
-            <span class="card-icon icon-tasks">✅</span>
-            <div class="card-body">
-              <h3>مهامي</h3>
-              <p>أضف المهام التي تريد إنجازها وتابع حالتها أولًا بأول.</p>
-            </div>
-            <span class="card-arrow">→</span>
-          </button>
-          <button type="button" class="home-card" data-page="planner" aria-label="التخطيط الأسبوعي">
-            <span class="card-icon icon-plan">📅</span>
-            <div class="card-body">
-              <h3>خطة الأسبوع</h3>
-              <p>نظّم وقت دراستك على أيام الأسبوع وحدد موعدًا لكل مادة.</p>
-            </div>
-            <span class="card-arrow">→</span>
-          </button>
-        </section>
-
-        <section class="home-cta animate-in" aria-label="بدء سريع">
-          <button class="quick-start-btn" type="button" id="quick-start-btn">
-            <span class="quick-start-icon" aria-hidden="true">▶</span>
-            <span class="quick-start-text">
-              <strong>ابدأ جلسة الآن</strong>
-              <small>انتقل مباشرة لتسجيل وقت مذاكرتك</small>
-            </span>
-          </button>
-        </section>
-
-        <section class="home-quick animate-in" aria-label="ملخص سريع ليومك">
-          <div class="quick-card">
-            <span class="quick-icon">◷</span>
-            <div class="quick-body">
-              <p class="quick-label">درست اليوم</p>
-              <p class="quick-value" id="quick-today-minutes">٠ دقيقة</p>
-              <p class="quick-hint" id="quick-today-hint">ابدأ جلستك الأولى لتظهر هنا.</p>
-            </div>
+          </div>
+          <div class="home-grid" aria-label="الأقسام الرئيسية">
+            <button type="button" class="home-card" data-page="sessions" aria-label="سجل جلسة دراسة جديدة">
+              <span class="card-icon icon-study">📖</span>
+              <div class="card-body">
+                <h3>سجلات الدراسة</h3>
+                <p>سجّل وقت مذاكرتك، المادة، المدة والملاحظات لكل جلسة.</p>
+              </div>
+              <span class="card-arrow">→</span>
+            </button>
+            <button type="button" class="home-card" data-page="tasks" aria-label="إدارة المهام اليومية">
+              <span class="card-icon icon-tasks">✅</span>
+              <div class="card-body">
+                <h3>مهامي</h3>
+                <p>أضف المهام التي تريد إنجازها وتابع حالتها أولًا بأول.</p>
+              </div>
+              <span class="card-arrow">→</span>
+            </button>
+            <button type="button" class="home-card" data-page="planner" aria-label="التخطيط الأسبوعي">
+              <span class="card-icon icon-plan">📅</span>
+              <div class="card-body">
+                <h3>خطة الأسبوع</h3>
+                <p>نظّم وقت دراستك على أيام الأسبوع وحدد موعدًا لكل مادة.</p>
+              </div>
+              <span class="card-arrow">→</span>
+            </button>
           </div>
         </section>
 

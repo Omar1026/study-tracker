@@ -75,8 +75,12 @@
   const onboardingSkip = document.querySelector("#onboarding-skip");
   const onboardingPages = document.querySelectorAll(".onboarding-page");
   const onboardingSteps = document.querySelectorAll(".step");
-  const quickTodayMinutes = document.querySelector("#quick-today-minutes");
-  const quickTodayHint = document.querySelector("#quick-today-hint");
+  const homeTodayMinutes = document.querySelector("#home-today-minutes");
+  const homeTodayGoal = document.querySelector("#home-today-goal");
+  const homeTodaySessions = document.querySelector("#home-today-sessions");
+  const homeTodayStreak = document.querySelector("#home-today-streak");
+  const homeTodayHint = document.querySelector("#home-today-hint");
+  const todayRing = document.querySelector("#today-ring");
 
   let onboardingIndex = 0;
 
@@ -288,7 +292,7 @@
 
     // إعادة تشغيل رسوم الدخول عند العودة للرئيسية
     if (page === "home") {
-      document.querySelectorAll(".animate-in, .home-hero, .poem-card, .home-grid, .home-quick").forEach((el) => {
+      document.querySelectorAll(".animate-in, .home-top, .poem-card, .home-tools").forEach((el) => {
         el.classList.remove("animate-in");
         void el.offsetHeight; // إعادةfluss
         el.classList.add("animate-in");
@@ -409,15 +413,28 @@
       document.querySelector("#study-streak-hint").textContent = streak ? "تقدّم جميل، واصل بإيقاع يناسبك." : "ابدأ بخطوة اليوم، والراحة جزء من الطريق.";
     }
 
-    // الملخص السريع في الصفحة الرئيسية
-    if (quickTodayMinutes) {
-      quickTodayMinutes.textContent = totalMinutes > 0
-        ? `${arabicNumber(totalMinutes)} دقيقة`
-        : "٠ دقيقة";
-      if (quickTodayHint) {
-        quickTodayHint.textContent = totalMinutes > 0
-          ? `حققت ${arabicNumber(percent)}٪ من هدفك اليومي.`
-          : "ابدأ جلستك الأولى لتظهر هنا.";
+    // ملخص اليوم في الصفحة الرئيسية
+    if (homeTodayMinutes) {
+      homeTodayMinutes.textContent = arabicNumber(totalMinutes);
+      if (homeTodaySessions) homeTodaySessions.textContent = arabicNumber(todaySessions.length);
+      if (homeTodayStreak) homeTodayStreak.textContent = arabicNumber(streak);
+      if (homeTodayGoal) {
+        homeTodayGoal.textContent = totalMinutes >= dailyGoal
+          ? "أتممت هدف اليوم ✦"
+          : `من هدف ${arabicNumber(dailyGoal)} دقيقة`;
+      }
+      if (homeTodayHint) {
+        homeTodayHint.textContent = totalMinutes >= dailyGoal
+          ? "أحسنت! واصل بهذا الإيقاع."
+          : totalMinutes > 0
+            ? `بقيت ${arabicNumber(Math.max(0, dailyGoal - totalMinutes))} دقيقة لهدف اليوم.`
+            : "ابدأ جلستك الأولى اليوم.";
+      }
+      if (todayRing) {
+        const ringPercent = totalMinutes > 0 ? Math.max(2, percent) : 0;
+        todayRing.style.setProperty("--today-progress", `${ringPercent}%`);
+        todayRing.classList.toggle("is-complete", totalMinutes >= dailyGoal);
+        todayRing.setAttribute("aria-label", `أنجزت ${arabicNumber(percent)}٪ من هدف اليوم`);
       }
     }
   }
