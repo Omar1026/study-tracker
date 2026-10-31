@@ -216,6 +216,8 @@
     const label = document.querySelector("#today-label");
     label.textContent = `الميلادي: ${gregorianDate} · الهجري: ${hijriDate} · الوقت: ${currentTime}`;
     label.dateTime = now.toISOString();
+    // حقل التاريخ لا يقبل تواريخ مستقبلية؛ نحدّث الحد الأقصى عند تغيّر اليوم.
+    if (studyDateInput) studyDateInput.max = dateKey(now);
   }
   const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   const timeLabel = (value) => {
@@ -303,7 +305,7 @@
     if (page === "home") {
       document.querySelectorAll(".animate-in, .home-top, .poem-card, .home-tools").forEach((el) => {
         el.classList.remove("animate-in");
-        void el.offsetHeight; // إعادةfluss
+        void el.offsetHeight; // إعادة التدفق
         el.classList.add("animate-in");
       });
     }
@@ -344,11 +346,25 @@
   function friendlyDbError(error) {
     const raw = error?.message || "";
     const code = error?.code || "";
+    if (code === "42703" || /column .* does not exist/i.test(raw)) return "مخطط قاعدة البيانات قديم. شغّل ملف setup_supabase.sql المحدّث في Supabase.";
     if (code === "42501" || /permission denied/i.test(raw)) return "صلاحيات الوصول مرفوضة. تأكد من تشغيل ملف setup_supabase.sql كاملًا.";
     if (code === "23514") return "القيم المُدخلة خارج النطاق المسموح. راجع القيم وأعد المحاولة.";
+    if (code === "23505") return "هذا العنصر موجود بالفعل.";
     if (code === "42P01" || /does not exist/i.test(raw)) return "أحد الجداول غير موجود. شغّل ملف setup_supabase.sql في Supabase.";
+    if (code === "PGRST301" || /JWT expired/i.test(raw)) return "انتهت صلاحية الجلسة. سجّل الدخول من جديد.";
     if (/Failed to fetch|NetworkError/i.test(raw)) return "تعذّر الاتصال بقاعدة البيانات. تحقق من إعداد supabase-config.js والإنترنت.";
     return "تعذّر إتمام العملية. حاول مجددًا.";
+  }
+
+  // حارس ضد الإرسال المزدوج: يُقفل النموذج حتى ينتهي الطلب الجاري.
+  const busyForms = new WeakSet();
+  function beginSubmit(targetForm) {
+    if (busyForms.has(targetForm)) return false;
+    busyForms.add(targetForm);
+    return true;
+  }
+  function endSubmit(targetForm) {
+    busyForms.delete(targetForm);
   }
 
   // رسالة عربية عند فتح رابط تأكيد/استعادة منتهي الصلاحية.
@@ -1217,26 +1233,34 @@
     if (studyDate > dateKey()) return showMessage(message, "لا يمكن تسجيل جلسة في تاريخ مستقبلي.");
     if (!subject) return showMessage(message, "اكتب اسم المادة أولًا.");
     if (!Number.isInteger(duration) || duration < 1 || duration > 1440) return showMessage(message, "أدخل مدة صحيحة بين دقيقة و٢٤ ساعة.");
+    if (!beginSubmit(form)) return;
     submitButton.disabled = true;
     showMessage(message, editingId ? "جارٍ حفظ التعديلات..." : "جارٍ حفظ الجلسة...");
-    const payload = { subject, duration, note, study_date: studyDate };
-    const request = editingId
-      ? supabaseClient.from("study_sessions").update(payload).eq("id", editingId).eq("user_id", currentUser.id).select().single()
-      : supabaseClient.from("study_sessions").insert({ ...payload, user_id: currentUser.id }).select().single();
-    const { data, error } = await request;
-    submitButton.disabled = false;
-    if (error) {
-      showMessage(message, `تعذّر حفظ الجلسة. ${friendlyDbError(error)}`);
+    try {
+      const payload = { subject, duration, note, study_date: studyDate };
+      const request = editingId
+        ? supabaseClient.from("study_sessions").update(payload).eq("id", editingId).eq("user_id", currentUser.id).select().single()
+        : supabaseClient.from("study_sessions").insert({ ...payload, user_id: currentUser.id }).select().single();
+      const { data, error } = await request;
+      if (error) {
+        showMessage(message, `تعذّر حفظ الجلسة. ${friendlyDbError(error)}`);
+        console.error(error);
+        return;
+      }
+      const wasEditing = Boolean(editingId);
+      if (wasEditing) sessions = sessions.map((session) => (session.id === editingId ? data : session));
+      else sessions.unshift(data);
+      sessions.sort((a, b) => (b.study_date === a.study_date ? new Date(b.created_at) - new Date(a.created_at) : b.study_date.localeCompare(a.study_date)));
+      render();
+      resetForm();
+      showMessage(message, wasEditing ? "تم حفظ التعديلات في حسابك." : "تم حفظ الجلسة في حسابك.", true);
+    } catch (error) {
+      showMessage(message, "تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.");
       console.error(error);
-      return;
+    } finally {
+      submitButton.disabled = false;
+      endSubmit(form);
     }
-    const wasEditing = Boolean(editingId);
-    if (wasEditing) sessions = sessions.map((session) => (session.id === editingId ? data : session));
-    else sessions.unshift(data);
-    sessions.sort((a, b) => (b.study_date === a.study_date ? new Date(b.created_at) - new Date(a.created_at) : b.study_date.localeCompare(a.study_date)));
-    render();
-    resetForm();
-    showMessage(message, wasEditing ? "تم حفظ التعديلات في حسابك." : "تم حفظ الجلسة في حسابك.", true);
   });
 
   sessionList.addEventListener("click", async (event) => {
@@ -1335,8 +1359,11 @@
     let { data, error } = await query(TASK_FIELDS_EXTENDED);
     if (error) {
       // قاعدة بيانات بلا أعمدة الأولوية والتكرار: نكمل بالوضع الأساسي بدل تعطّل الصفحة.
+      if (error.code !== "42703") console.warn(error);
       tasksHaveExtras = false;
       ({ data, error } = await query(TASK_FIELDS));
+    } else {
+      tasksHaveExtras = true;
     }
     if (error) {
       console.error(error);
@@ -1392,33 +1419,44 @@
     let due = taskDueInput.value || null;
     if (!title) return showMessage(taskMessage, "اكتب عنوان المهمة أولًا.");
     if (!due && recurrence !== "none") due = dateKey();
+    if (!beginSubmit(taskForm)) return;
+    const extrasSaved = tasksHaveExtras;
     const payload = { user_id: currentUser.id, title, due_date: due };
-    if (tasksHaveExtras) {
+    if (extrasSaved) {
       payload.priority = priority;
       payload.recurrence = recurrence;
     }
-    const { data, error } = await supabaseClient
-      .from("tasks")
-      .insert(payload)
-      .select()
-      .single();
-    if (error) {
-      showMessage(taskMessage, `تعذّر إضافة المهمة. ${friendlyDbError(error)}`);
+    try {
+      const { data, error } = await supabaseClient
+        .from("tasks")
+        .insert(payload)
+        .select()
+        .single();
+      if (error) {
+        showMessage(taskMessage, `تعذّر إضافة المهمة. ${friendlyDbError(error)}`);
+        console.error(error);
+        return;
+      }
+      tasks.unshift(normalizeTask(data));
+      sortTasks();
+      renderTasks();
+      renderCalendar();
+      taskForm.reset();
+      taskPriorityInput.value = "normal";
+      taskRepeatInput.value = "none";
+      if (!extrasSaved) {
+        showMessage(taskMessage, "أُضيفت المهمة (بالوضع الأساسي). الأولويات والتكرار يحتاجان تحديث قاعدة البيانات.", true);
+      } else if (recurrence !== "none") {
+        showMessage(taskMessage, `أُضيفت المهمة، وستتكرر ${TASK_REPEAT_LABEL[recurrence]}.`, true);
+      } else {
+        showMessage(taskMessage, "تمت إضافة المهمة إلى قائمتك.", true);
+      }
+    } catch (error) {
+      showMessage(taskMessage, "تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.");
       console.error(error);
-      return;
+    } finally {
+      endSubmit(taskForm);
     }
-    tasks.unshift(normalizeTask(data));
-    sortTasks();
-    renderTasks();
-    renderCalendar();
-    taskForm.reset();
-    taskPriorityInput.value = "normal";
-    taskRepeatInput.value = "none";
-    showMessage(
-      taskMessage,
-      recurrence !== "none" ? `أُضيفت المهمة، وستتكرر ${TASK_REPEAT_LABEL[recurrence]}.` : "تمت إضافة المهمة إلى قائمتك.",
-      true
-    );
   });
 
   taskList.addEventListener("click", async (event) => {
@@ -1524,21 +1562,29 @@
     const weekday = Number(planDayInput.value);
     const startTime = planTimeInput.value || null;
     if (!title) return showMessage(planMessage, "اكتب عنوان البند أولًا.");
-    const { data, error } = await supabaseClient
-      .from("plan_items")
-      .insert({ user_id: currentUser.id, title, weekday, start_time: startTime })
-      .select()
-      .single();
-    if (error) {
-      showMessage(planMessage, `تعذّر إضافة البند. ${friendlyDbError(error)}`);
+    if (!beginSubmit(planForm)) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from("plan_items")
+        .insert({ user_id: currentUser.id, title, weekday, start_time: startTime })
+        .select()
+        .single();
+      if (error) {
+        showMessage(planMessage, `تعذّر إضافة البند. ${friendlyDbError(error)}`);
+        console.error(error);
+        return;
+      }
+      planItems.push(data);
+      planItems.sort((a, b) => (a.weekday === b.weekday ? String(a.start_time || "99").localeCompare(String(b.start_time || "99")) : a.weekday - b.weekday));
+      renderPlan();
+      planForm.reset();
+      showMessage(planMessage, `تمت إضافة البند إلى ${WEEK_NAMES[weekday]}.`, true);
+    } catch (error) {
+      showMessage(planMessage, "تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.");
       console.error(error);
-      return;
+    } finally {
+      endSubmit(planForm);
     }
-    planItems.push(data);
-    planItems.sort((a, b) => (a.weekday === b.weekday ? String(a.start_time || "99").localeCompare(String(b.start_time || "99")) : a.weekday - b.weekday));
-    renderPlan();
-    planForm.reset();
-    showMessage(planMessage, `تمت إضافة البند إلى ${WEEK_NAMES[weekday]}.`, true);
   });
 
   weekPlan.addEventListener("click", async (event) => {
@@ -1758,18 +1804,29 @@
   });
 
   signOutButton.addEventListener("click", async () => {
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) {
-      showMessage(cloudMessage, "تعذّر تسجيل الخروج.");
-      console.error(error);
-      return;
+    signOutButton.disabled = true;
+    try {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) {
+        // جلسة منتهية أو حساب محذوف: نمسح الجلسة محليًا حتى لا يعلق المستخدم.
+        console.warn("تعذّر إبطال الجلسة على الخادم، وسنمسحها محليًا.", error);
+        await supabaseClient.auth.signOut({ scope: "local" }).catch(() => {});
+      }
+    } catch (error) {
+      console.warn("تعذّر إنهاء الجلسة، وسنمسحها محليًا.", error);
+      await supabaseClient.auth.signOut({ scope: "local" }).catch(() => {});
+    } finally {
+      signOutButton.disabled = false;
+      showSignedOut();
     }
-    showSignedOut();
   });
 
   // تحديث تلقائي عند العودة للتبويب (يفتح فجوة منتصف الليل أو تعدد الأجهزة).
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && currentUser) loadSessions(true);
+    if (document.visibilityState !== "visible" || !currentUser || !supabaseClient) return;
+    loadSessions(true);
+    loadTasks();
+    loadPlan();
   });
 
   // ===== زر تثبيت التطبيق (PWA) =====

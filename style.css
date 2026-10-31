@@ -206,6 +206,29 @@ body[data-theme="night"] .cal-cell.heat-3, body[data-theme="night"] .legend-swat
 body[data-theme="night"] .setup-note { background: #3c3421; color: #f0dba4; }
 body[data-theme="night"] .demo-notice { border-color: #67552c; background: #3c3421; color: #f0dba4; }
 
+/* في الوضع الليلي يصبح --teal لونًا داكنًا؛ نستخدم --teal-dark (الفاتح) للنصوص والحدود. */
+body[data-theme="night"] .form-message.success,
+body[data-theme="night"] .view-tab.is-active,
+body[data-theme="night"] .privacy-policy summary,
+body[data-theme="night"] .privacy-content a,
+body[data-theme="night"] .data-tools a,
+body[data-theme="night"] .install-steps b,
+body[data-theme="night"] .privacy-card a,
+body[data-theme="night"] .onboarding-skip:hover,
+body[data-theme="night"] .text-action:hover,
+body[data-theme="night"] .section-tab:hover,
+body[data-theme="night"] .view-tab:hover,
+body[data-theme="night"] .week-add:hover,
+body[data-theme="night"] .footer-suggestion a:hover,
+body[data-theme="night"] .privacy-note span { color: var(--teal-dark); }
+body[data-theme="night"] .privacy-btn {
+  color: var(--teal-dark);
+  border-color: var(--teal-dark);
+  background: rgba(255, 255, 255, .04);
+}
+body[data-theme="night"] .privacy-btn:hover { background: var(--teal-dark); color: #10201c; }
+body[data-theme="night"] .install-chip:not(.can-install):hover { border-color: var(--teal-dark); color: var(--teal-dark); }
+
 /* ===== اللوحات العامة ===== */
 .content-grid { display: grid; grid-template-columns: minmax(300px, .87fr) minmax(0, 1.35fr); gap: 20px; align-items: start; }
 .panel { padding: 23px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
