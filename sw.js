@@ -1,6 +1,6 @@
 // عامل الخدمة: يخزّن ملفات التطبيق للعمل دون اتصال.
 // ملاحظة: عند تغيير أي ملف، ارفع رقم CACHE في الأسفل لتفريغ النسخة القديمة.
-const CACHE = "ijtima-nuqat-v11";
+const CACHE = "ijtima-nuqat-v12";
 
 const SHELL = [
   "./",
@@ -60,5 +60,18 @@ self.addEventListener("fetch", (event) => {
           cached || (request.mode === "navigate" ? caches.match("./index.html") : Response.error())
         )
       )
+  );
+});
+
+// عند الضغط على إشعار المؤقت: أعِد المستخدم إلى التطبيق.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) return client.focus();
+      }
+      return self.clients.openWindow("./");
+    })
   );
 });

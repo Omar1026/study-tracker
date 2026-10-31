@@ -204,6 +204,36 @@
       </div>
       <div class="app-page hidden" id="sessions-page">
       <div class="section-view" id="sessions-section">
+        <section class="panel pomodoro-panel" id="pomodoro-panel" aria-labelledby="pomodoro-heading">
+          <div class="panel-heading">
+            <div><p class="eyebrow">تركيز عميق</p><h2 id="pomodoro-heading">مؤقت بومودورو</h2></div>
+            <span class="count-badge" id="pomodoro-rounds">٠ جلسات مكتملة</span>
+          </div>
+          <div class="pomodoro-body">
+            <div class="pomodoro-ring" id="pomodoro-ring" style="--pomodoro-progress: 0%">
+              <div class="pomodoro-face">
+                <span class="pomodoro-time" id="pomodoro-time" role="timer" aria-live="off">٢٥:٠٠</span>
+                <span class="pomodoro-mode" id="pomodoro-mode">وقت التركيز</span>
+              </div>
+            </div>
+            <div class="pomodoro-side">
+              <div class="pomodoro-presets" role="group" aria-label="مدة التركيز والراحة">
+                <button class="pomodoro-preset is-active" type="button" data-focus="25" data-break="5" aria-pressed="true">٢٥ / ٥</button>
+                <button class="pomodoro-preset" type="button" data-focus="50" data-break="10" aria-pressed="false">٥٠ / ١٠</button>
+                <button class="pomodoro-preset" type="button" data-focus="15" data-break="3" aria-pressed="false">١٥ / ٣</button>
+              </div>
+              <label class="pomodoro-subject-label" for="pomodoro-subject">المادة التي تدرسها <span class="optional">(اختياري)</span></label>
+              <input id="pomodoro-subject" type="text" placeholder="مثال: الرياضيات" maxlength="60" list="subject-suggestions" autocomplete="off">
+              <div class="pomodoro-actions">
+                <button class="button button-primary" type="button" id="pomodoro-toggle">ابدأ التركيز</button>
+                <button class="button button-quiet" type="button" id="pomodoro-reset">إعادة</button>
+                <button class="button pomodoro-log hidden" type="button" id="pomodoro-log">سجّل الجلسة</button>
+              </div>
+              <p class="pomodoro-hint" id="pomodoro-hint">ركّز ٢٥ دقيقة، ثم خذ راحة ٥ دقائق. يعمل المؤقت حتى لو غادرت الصفحة.</p>
+              <label class="pomodoro-notify"><input type="checkbox" id="pomodoro-notify" checked> <span>نبّهني عند انتهاء الوقت بصوت وإشعار</span></label>
+            </div>
+          </div>
+        </section>
         <div class="content-grid">
           <section class="panel form-panel" aria-labelledby="form-heading">
             <div class="panel-heading"><div><p class="eyebrow">ابدأ الآن</p><h2 id="form-heading">أضف جلسة دراسة</h2></div><span class="heading-icon" aria-hidden="true">＋</span></div>

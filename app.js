@@ -43,6 +43,20 @@
   const subjectSuggestions = document.querySelector("#subject-suggestions");
   const quickStartButton = document.querySelector("#quick-start-btn");
 
+  // مؤقت بومودورو
+  const pomodoroPanel = document.querySelector("#pomodoro-panel");
+  const pomodoroTime = document.querySelector("#pomodoro-time");
+  const pomodoroModeLabel = document.querySelector("#pomodoro-mode");
+  const pomodoroRing = document.querySelector("#pomodoro-ring");
+  const pomodoroToggle = document.querySelector("#pomodoro-toggle");
+  const pomodoroReset = document.querySelector("#pomodoro-reset");
+  const pomodoroLog = document.querySelector("#pomodoro-log");
+  const pomodoroRounds = document.querySelector("#pomodoro-rounds");
+  const pomodoroHint = document.querySelector("#pomodoro-hint");
+  const pomodoroSubjectInput = document.querySelector("#pomodoro-subject");
+  const pomodoroNotify = document.querySelector("#pomodoro-notify");
+  const pomodoroPresets = document.querySelectorAll(".pomodoro-preset");
+
   // الشريط العلوي
   const themeToggle = document.querySelector("#theme-toggle");
   const settingsTopButton = document.querySelector("#settings-top");
@@ -104,6 +118,24 @@
   let timerElapsedMs = 0;
   let timerInterval = null;
   let calCursor = new Date();
+
+  // حالة مؤقت بومودورو
+  const POMODORO_KEY = "study-tracker-pomodoro";
+  let pomodoroInterval = null;
+  let pomodoroAudioCtx = null;
+  let pomodoroState = {
+    mode: "focus",
+    focusMinutes: 25,
+    breakMinutes: 5,
+    rounds: 0,
+    roundDate: "",
+    remainingMs: 25 * 60000,
+    endAt: null,
+    running: false,
+    finishedFocus: false,
+    subject: "",
+    notify: true,
+  };
 
   const DEFAULT_GOAL = 120;
   const WEEK_ORDER = [6, 0, 1, 2, 3, 4, 5]; // السبت ثم الأحد..الجمعة
@@ -818,6 +850,336 @@
     stopTimer();
     showMessage(message, "تم تصفير المؤقت.", true);
   });
+  // ===== مؤقت بومودورو =====
+  function pomodoroModeMinutes(mode = pomodoroState.mode) {
+    return (mode === "focus" ? pomodoroState.focusMinutes : pomodoroState.breakMinutes) * 60000;
+  }
+
+  function savePomodoroState() {
+    try {
+      localStorage.setItem(POMODORO_KEY, JSON.stringify({ ...pomodoroState }));
+    } catch (error) {
+      console.warn("تعذّر حفظ حالة مؤقت التركيز.", error);
+    }
+  }
+
+  function setPomodoroHint(text, done = false) {
+    if (!pomodoroHint) return;
+    pomodoroHint.textContent = text;
+    pomodoroHint.classList.toggle("is-done", done);
+  }
+
+  function defaultPomodoroHint() {
+    return `ركّز ${arabicNumber(pomodoroState.focusMinutes)} دقيقة، ثم خذ راحة ${arabicNumber(pomodoroState.breakMinutes)} دقائق. يعمل المؤقت حتى لو غادرت الصفحة.`;
+  }
+
+  function renderPomodoro() {
+    if (!pomodoroPanel) return;
+    const total = Math.max(1000, pomodoroModeMinutes());
+    const remaining = Math.max(0, pomodoroState.remainingMs);
+    const totalSeconds = Math.ceil(remaining / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const label = `${toArabicDigits(minutes)}:${toArabicDigits(seconds)}`;
+    pomodoroTime.textContent = label;
+    pomodoroTime.setAttribute("aria-label", `الوقت المتبقي ${arabicNumber(minutes)} دقيقة و${arabicNumber(seconds)} ثانية`);
+    const progress = Math.min(100, Math.max(0, ((total - remaining) / total) * 100));
+    pomodoroRing.style.setProperty("--pomodoro-progress", `${progress.toFixed(2)}%`);
+    pomodoroRing.classList.toggle("is-break", pomodoroState.mode === "break");
+    pomodoroPanel.classList.toggle("is-running", pomodoroState.running);
+    pomodoroModeLabel.textContent = pomodoroState.mode === "focus" ? "وقت التركيز" : "وقت الراحة";
+    if (pomodoroState.running) pomodoroToggle.textContent = "إيقاف مؤقت";
+    else if (remaining < total - 500) pomodoroToggle.textContent = "استئناف";
+    else pomodoroToggle.textContent = pomodoroState.mode === "focus" ? "ابدأ التركيز" : "ابدأ الراحة";
+    const count = pomodoroState.rounds;
+    pomodoroRounds.textContent = count === 1 ? "جلسة واحدة مكتملة" : `${arabicNumber(count)} جلسات مكتملة`;
+    pomodoroLog.classList.toggle("hidden", !pomodoroState.finishedFocus);
+    pomodoroLog.textContent = `سجّل ${arabicNumber(pomodoroState.focusMinutes)} دقيقة`;
+    if (pomodoroState.running) {
+      document.title = `${label} · ${pomodoroState.mode === "focus" ? "تركيز" : "راحة"} — اجتماع النقط`;
+    }
+  }
+
+  function stopPomodoroInterval() {
+    if (pomodoroInterval) clearInterval(pomodoroInterval);
+    pomodoroInterval = null;
+  }
+
+  function notifyPomodoro(title, body) {
+    if (!pomodoroState.notify) return;
+    try {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      const options = { body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "pomodoro" };
+      navigator.serviceWorker?.getRegistration()
+        .then((registration) => {
+          if (registration?.showNotification) return registration.showNotification(title, options);
+          new Notification(title, options);
+          return undefined;
+        })
+        .catch(() => {
+          try { new Notification(title, options); } catch (error) { console.warn(error); }
+        });
+    } catch (error) {
+      console.warn("تعذّر إظهار إشعار المؤقت.", error);
+    }
+  }
+
+  function playPomodoroChime() {
+    if (!pomodoroState.notify) return;
+    try {
+      const ctx = ensurePomodoroAudio();
+      if (!ctx) return;
+      [0, 0.28, 0.56].forEach((offset, index) => {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.value = index === 2 ? 880 : 660;
+        const at = ctx.currentTime + offset;
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(0.22, at + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.24);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(at);
+        oscillator.stop(at + 0.26);
+      });
+    } catch (error) {
+      console.warn("تعذّر تشغيل تنبيه المؤقت.", error);
+    }
+  }
+
+  function requestPomodoroPermission() {
+    try {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "default") Notification.requestPermission().catch(() => {});
+    } catch (error) {
+      console.warn("تعذّر طلب إذن الإشعارات.", error);
+    }
+  }
+
+  function ensurePomodoroAudio() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      if (!pomodoroAudioCtx) pomodoroAudioCtx = new AudioCtx();
+      if (pomodoroAudioCtx.state === "suspended") pomodoroAudioCtx.resume().catch(() => {});
+      return pomodoroAudioCtx;
+    } catch (error) {
+      console.warn("تعذّر تهيئة صوت المؤقت.", error);
+      return null;
+    }
+  }
+
+  function completePomodoro() {
+    stopPomodoroInterval();
+    const finishedFocus = pomodoroState.mode === "focus";
+    pomodoroState.running = false;
+    pomodoroState.endAt = null;
+    pomodoroState.remainingMs = 0;
+    if (finishedFocus) {
+      const today = dateKey();
+      if (pomodoroState.roundDate !== today) {
+        pomodoroState.roundDate = today;
+        pomodoroState.rounds = 0;
+      }
+      pomodoroState.rounds += 1;
+      pomodoroState.finishedFocus = true;
+    }
+    const nextMode = finishedFocus ? "break" : "focus";
+    pomodoroState.mode = nextMode;
+    pomodoroState.remainingMs = pomodoroModeMinutes(nextMode);
+    savePomodoroState();
+    renderPomodoro();
+    if (finishedFocus) {
+      setPomodoroHint(`انتهت جلسة التركيز! خذ راحة ${arabicNumber(pomodoroState.breakMinutes)} دقائق، ثم سجّل جلستك.`, true);
+      notifyPomodoro("انتهى وقت التركيز ✦", `أنجزت ${arabicNumber(pomodoroState.focusMinutes)} دقيقة تركيز. حان وقت الراحة ${arabicNumber(pomodoroState.breakMinutes)} دقائق.`);
+    } else {
+      setPomodoroHint("انتهت الراحة. لنعد إلى التركيز.", true);
+      notifyPomodoro("انتهت الراحة ✦", "حان وقت العودة إلى التركيز.");
+    }
+    playPomodoroChime();
+    navigateToPage(currentPage, false);
+  }
+
+  function tickPomodoro() {
+    if (!pomodoroState.running || !pomodoroState.endAt) return;
+    const left = pomodoroState.endAt - Date.now();
+    if (left <= 0) {
+      completePomodoro();
+      return;
+    }
+    pomodoroState.remainingMs = left;
+    renderPomodoro();
+  }
+
+  function startPomodoroInterval() {
+    stopPomodoroInterval();
+    pomodoroInterval = setInterval(tickPomodoro, 1000);
+    tickPomodoro();
+  }
+
+  function togglePomodoro() {
+    if (!pomodoroPanel) return;
+    if (pomodoroState.running) {
+      pomodoroState.remainingMs = Math.max(0, (pomodoroState.endAt || Date.now()) - Date.now());
+      pomodoroState.endAt = null;
+      pomodoroState.running = false;
+      stopPomodoroInterval();
+      savePomodoroState();
+      renderPomodoro();
+      setPomodoroHint("أُوقف المؤقت مؤقتًا. اضغط «استئناف» لمتابعة العدّ.");
+      navigateToPage(currentPage, false);
+      return;
+    }
+    if (pomodoroState.remainingMs <= 500) pomodoroState.remainingMs = pomodoroModeMinutes();
+    requestPomodoroPermission();
+    ensurePomodoroAudio();
+    pomodoroState.endAt = Date.now() + pomodoroState.remainingMs;
+    pomodoroState.running = true;
+    savePomodoroState();
+    setPomodoroHint(defaultPomodoroHint());
+    startPomodoroInterval();
+    renderPomodoro();
+  }
+
+  function resetPomodoro() {
+    stopPomodoroInterval();
+    pomodoroState.running = false;
+    pomodoroState.endAt = null;
+    pomodoroState.mode = "focus";
+    pomodoroState.finishedFocus = false;
+    pomodoroState.remainingMs = pomodoroModeMinutes("focus");
+    savePomodoroState();
+    renderPomodoro();
+    setPomodoroHint(defaultPomodoroHint());
+    navigateToPage(currentPage, false);
+  }
+
+  function logPomodoroSession() {
+    if (!pomodoroState.finishedFocus) return;
+    if (durationInput) durationInput.value = pomodoroState.focusMinutes;
+    if (studyDateInput) studyDateInput.value = dateKey();
+    const subject = (pomodoroState.subject || "").trim();
+    if (subject && subjectInput) subjectInput.value = subject;
+    showMessage(message, `أُضيفت مدة التركيز (${arabicNumber(pomodoroState.focusMinutes)} دقيقة) إلى حقل المدة. احفظ الجلسة لإضافتها إلى سجلك.`, true);
+    if (subjectInput) {
+      subjectInput.focus({ preventScroll: true });
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    pomodoroState.finishedFocus = false;
+    savePomodoroState();
+    renderPomodoro();
+  }
+
+  function restorePomodoro() {
+    let restoreCompleted = false;
+    try {
+      const saved = JSON.parse(localStorage.getItem(POMODORO_KEY) || "null");
+      if (!saved || typeof saved !== "object") return restoreCompleted;
+      const focusOptions = [15, 25, 50];
+      const breakOptions = [3, 5, 10];
+      const focusMinutes = focusOptions.includes(Number(saved.focusMinutes)) ? Number(saved.focusMinutes) : 25;
+      const breakMinutes = breakOptions.includes(Number(saved.breakMinutes)) ? Number(saved.breakMinutes) : 5;
+      const maxMs = Math.max(focusMinutes, breakMinutes) * 60000;
+      const remaining = Number(saved.remainingMs);
+      pomodoroState = {
+        mode: saved.mode === "break" ? "break" : "focus",
+        focusMinutes,
+        breakMinutes,
+        rounds: Number.isInteger(saved.rounds) && saved.rounds >= 0 ? saved.rounds : 0,
+        roundDate: typeof saved.roundDate === "string" ? saved.roundDate : dateKey(),
+        remainingMs: Number.isFinite(remaining) ? Math.max(0, Math.min(remaining, maxMs)) : focusMinutes * 60000,
+        endAt: Number(saved.endAt) || null,
+        running: Boolean(saved.running) && Boolean(Number(saved.endAt)),
+        finishedFocus: Boolean(saved.finishedFocus),
+        subject: typeof saved.subject === "string" ? saved.subject.slice(0, 60) : "",
+        notify: saved.notify !== false,
+      };
+      if (pomodoroState.running) {
+        const left = pomodoroState.endAt - Date.now();
+        if (left > 0) pomodoroState.remainingMs = left;
+        else restoreCompleted = true;
+      }
+    } catch (error) {
+      console.warn("تعذّر استعادة حالة مؤقت التركيز.", error);
+    }
+    return restoreCompleted;
+  }
+
+  function initPomodoro() {
+    if (!pomodoroPanel) return;
+    const restoreCompleted = restorePomodoro();
+    if (pomodoroState.roundDate !== dateKey()) {
+      pomodoroState.rounds = 0;
+      pomodoroState.roundDate = dateKey();
+    }
+    if (pomodoroSubjectInput) pomodoroSubjectInput.value = pomodoroState.subject;
+    if (pomodoroNotify) pomodoroNotify.checked = pomodoroState.notify;
+    pomodoroPresets.forEach((preset) => {
+      const active = Number(preset.dataset.focus) === pomodoroState.focusMinutes
+        && Number(preset.dataset.break) === pomodoroState.breakMinutes;
+      preset.classList.toggle("is-active", active);
+      preset.setAttribute("aria-pressed", String(active));
+    });
+    pomodoroToggle.addEventListener("click", togglePomodoro);
+    pomodoroReset.addEventListener("click", resetPomodoro);
+    pomodoroLog.addEventListener("click", logPomodoroSession);
+    pomodoroPresets.forEach((preset) => {
+      preset.addEventListener("click", () => {
+        const focusMinutes = Number(preset.dataset.focus);
+        const breakMinutes = Number(preset.dataset.break);
+        if (!focusMinutes || !breakMinutes) return;
+        stopPomodoroInterval();
+        pomodoroState.focusMinutes = focusMinutes;
+        pomodoroState.breakMinutes = breakMinutes;
+        pomodoroState.mode = "focus";
+        pomodoroState.running = false;
+        pomodoroState.endAt = null;
+        pomodoroState.finishedFocus = false;
+        pomodoroState.remainingMs = pomodoroModeMinutes("focus");
+        pomodoroPresets.forEach((item) => {
+          const active = item === preset;
+          item.classList.toggle("is-active", active);
+          item.setAttribute("aria-pressed", String(active));
+        });
+        savePomodoroState();
+        renderPomodoro();
+        setPomodoroHint(defaultPomodoroHint());
+        navigateToPage(currentPage, false);
+      });
+    });
+    if (pomodoroSubjectInput) {
+      pomodoroSubjectInput.addEventListener("input", () => {
+        pomodoroState.subject = pomodoroSubjectInput.value.slice(0, 60);
+      });
+      pomodoroSubjectInput.addEventListener("change", savePomodoroState);
+    }
+    if (pomodoroNotify) {
+      pomodoroNotify.addEventListener("change", () => {
+        pomodoroState.notify = pomodoroNotify.checked;
+        savePomodoroState();
+        if (pomodoroState.notify) requestPomodoroPermission();
+      });
+    }
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && pomodoroState.running) tickPomodoro();
+    });
+    if (restoreCompleted) {
+      pomodoroState.running = true;
+      completePomodoro();
+    }
+    if (pomodoroState.running) {
+      startPomodoroInterval();
+      setPomodoroHint(defaultPomodoroHint());
+    } else if (pomodoroState.finishedFocus) {
+      setPomodoroHint(`انتهت جلسة التركيز! خذ راحة ${arabicNumber(pomodoroState.breakMinutes)} دقائق، ثم سجّل جلستك.`, true);
+    } else {
+      setPomodoroHint(defaultPomodoroHint());
+    }
+    renderPomodoro();
+    savePomodoroState();
+  }
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const subject = subjectInput.value.trim();
@@ -1159,6 +1521,7 @@
   });
   loadAppearance();
   applyAppearance();
+  initPomodoro();
   themeToggle.textContent = appearance.theme === "night" ? "🌙" : "☀️";
   document.querySelector("#auth-forgot").addEventListener("click", handleForgotPassword);
   authForm.addEventListener("submit", handleAuth);
