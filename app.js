@@ -40,6 +40,11 @@
   const timerReset = document.querySelector("#timer-reset");
   const sessionSearch = document.querySelector("#session-search");
   const exportAccountDataButton = document.querySelector("#export-account-data");
+  const importAccountDataButton = document.querySelector("#import-account-data");
+  const importFileInput = document.querySelector("#import-file");
+  const notifyToggle = document.querySelector("#notify-toggle");
+  const notifyStatus = document.querySelector("#notify-status");
+  const weeklyReportButton = document.querySelector("#weekly-report-btn");
   const subjectSuggestions = document.querySelector("#subject-suggestions");
   const quickStartButton = document.querySelector("#quick-start-btn");
 
@@ -205,6 +210,220 @@
   const arabicNumber = (value) => new Intl.NumberFormat("ar-SA").format(value);
   const weekdayShort = (date) => new Intl.DateTimeFormat("ar-SA", { weekday: "short" }).format(date);
   const dateShort = (key) => new Intl.DateTimeFormat("ar-SA", { day: "numeric", month: "short" }).format(new Date(`${key}T00:00:00`));
+
+  // ===== الطبقة دون اتصال: ذاكرة محلية + طابور مزامنة تلقائي =====
+  const CACHE_KEYS = {
+    sessions: "study-tracker-cache-sessions",
+    tasks: "study-tracker-cache-tasks",
+    plan: "study-tracker-cache-plan",
+    goal: "study-tracker-cache-goal",
+    queue: "study-tracker-pending-ops",
+  };
+  let pendingOps = [];
+  try { pendingOps = JSON.parse(localStorage.getItem(CACHE_KEYS.queue) || "[]"); } catch { pendingOps = []; }
+  let offlineTempSeq = 0;
+  const readCache = (key) => {
+    try {
+      const raw = localStorage.getItem(key);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return Array.isArray(parsed) ? parsed : parsed;
+    } catch { return null; }
+  };
+  const writeCache = (key, value) => {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch { console.warn("تعذر حفظ الذاكرة المحلية."); }
+  };
+  const clearAppCache = () => {
+    [CACHE_KEYS.sessions, CACHE_KEYS.tasks, CACHE_KEYS.plan, CACHE_KEYS.goal].forEach((key) => {
+      try { localStorage.removeItem(key); } catch { /* ignore */ }
+    });
+  };
+  const tempId = () => `local-${Date.now().toString(36)}-${++offlineTempSeq}`;
+  const isNetworkError = (error) => {
+    const text = String(error?.message || error || "").toLowerCase();
+    return /failed to fetch|networkerror|network error|load failed|timed?\s?out|err_network/.test(text);
+  };
+  function persistQueue() {
+    writeCache(CACHE_KEYS.queue, pendingOps);
+  }
+  function cacheAll() {
+    if (demoMode) return;
+    writeCache(CACHE_KEYS.sessions, sessions);
+    writeCache(CACHE_KEYS.tasks, tasks);
+    writeCache(CACHE_KEYS.plan, planItems);
+    writeCache(CACHE_KEYS.goal, dailyGoal);
+  }
+  function saveSessionsLocal() {
+    sessions.sort((a, b) => (b.study_date === a.study_date ? new Date(b.created_at) - new Date(a.created_at) : b.study_date.localeCompare(a.study_date)));
+    render();
+    cacheAll();
+  }
+
+  // تطبيق العملية على الحالة المحلية فورًا (تعمل الواجهة حتى دون إنترنت).
+  function applyOpLocally(op) {
+    switch (op.type) {
+      case "session.save":
+        sessions.unshift({ id: op.localId, ...op.payload });
+        saveSessionsLocal();
+        break;
+      case "session.update":
+        sessions = sessions.map((session) => (session.id === op.id ? { ...session, ...op.payload } : session));
+        saveSessionsLocal();
+        break;
+      case "session.delete":
+        sessions = sessions.filter((session) => session.id !== op.id);
+        if (editingId === op.id) resetForm();
+        saveSessionsLocal();
+        break;
+      case "task.save":
+        tasks.unshift(normalizeTask({ id: op.localId, done: false, created_at: new Date().toISOString(), ...op.payload }));
+        sortTasks();
+        renderTasks();
+        renderCalendar();
+        cacheAll();
+        break;
+      case "task.update":
+        tasks = tasks.map((entry) => (entry.id === op.id ? { ...entry, ...op.patch } : entry));
+        sortTasks();
+        renderTasks();
+        renderCalendar();
+        cacheAll();
+        break;
+      case "task.delete":
+        tasks = tasks.filter((entry) => entry.id !== op.id);
+        renderTasks();
+        renderCalendar();
+        cacheAll();
+        break;
+      case "plan.save":
+        planItems.push({ id: op.localId, created_at: new Date().toISOString(), ...op.payload });
+        planItems.sort((a, b) => (a.weekday === b.weekday ? String(a.start_time || "99").localeCompare(String(b.start_time || "99")) : a.weekday - b.weekday));
+        renderPlan();
+        renderCalendar();
+        cacheAll();
+        break;
+      case "plan.delete":
+        planItems = planItems.filter((entry) => entry.id !== op.id);
+        renderPlan();
+        renderCalendar();
+        cacheAll();
+        break;
+      case "goal":
+        dailyGoal = op.value;
+        if (goalInput) goalInput.value = op.value;
+        render();
+        cacheAll();
+        break;
+      default:
+        break;
+    }
+  }
+  function queueOfflineOp(op, offlineMessage) {
+    pendingOps.push(op);
+    persistQueue();
+    applyOpLocally(op);
+    if (offlineMessage) showMessage(offlineMessage.target, offlineMessage.text, true);
+  }
+  async function flushPendingOps() {
+    if (demoMode || !currentUser || !supabaseClient || !pendingOps.length) return;
+    let index = 0;
+    while (index < pendingOps.length) {
+      const op = pendingOps[index];
+      try {
+        if (op.type === "session.save") {
+          const { data, error } = await supabaseClient.from("study_sessions").insert({ ...op.payload, user_id: currentUser.id }).select().single();
+          if (error) throw error;
+          sessions = sessions.map((entry) => (entry.id === op.localId ? data : entry));
+        } else if (op.type === "session.update") {
+          const { error } = await supabaseClient.from("study_sessions").update(op.payload).eq("id", op.id).eq("user_id", currentUser.id);
+          if (error) throw error;
+        } else if (op.type === "session.delete") {
+          const { error } = await supabaseClient.from("study_sessions").delete().eq("id", op.id).eq("user_id", currentUser.id);
+          if (error) throw error;
+        } else if (op.type === "task.save") {
+          const { priority, recurrence, ...basePayload } = { ...op.payload, user_id: currentUser.id };
+          const sendPayload = op.extras ? { ...basePayload, priority, recurrence } : basePayload;
+          const { data, error } = await supabaseClient.from("tasks").insert(sendPayload).select().single();
+          if (op.extras && error && /42703|column/i.test(String(error.message || ""))) {
+            const { data: fallbackData, error: fallbackError } = await supabaseClient.from("tasks").insert(basePayload).select().single();
+            if (fallbackError) throw fallbackError;
+            tasks = tasks.map((entry) => (entry.id === op.localId ? normalizeTask(fallbackData) : entry));
+          } else if (error) {
+            throw error;
+          } else {
+            tasks = tasks.map((entry) => (entry.id === op.localId ? normalizeTask(data) : entry));
+          }
+        } else if (op.type === "task.update") {
+          const { error } = await supabaseClient.from("tasks").update(op.patch).eq("id", op.id).eq("user_id", currentUser.id);
+          if (error) throw error;
+        } else if (op.type === "task.delete") {
+          const { error } = await supabaseClient.from("tasks").delete().eq("id", op.id).eq("user_id", currentUser.id);
+          if (error) throw error;
+        } else if (op.type === "plan.save") {
+          const { data, error } = await supabaseClient.from("plan_items").insert({ ...op.payload, user_id: currentUser.id }).select().single();
+          if (error) throw error;
+          planItems = planItems.map((entry) => (entry.id === op.localId ? data : entry));
+        } else if (op.type === "plan.delete") {
+          const { error } = await supabaseClient.from("plan_items").delete().eq("id", op.id).eq("user_id", currentUser.id);
+          if (error) throw error;
+        } else if (op.type === "goal") {
+          const { error } = await supabaseClient.auth.updateUser({ data: { daily_goal: op.value } });
+          if (error) throw error;
+        }
+        pendingOps.splice(index, 1);
+        persistQueue();
+        if (op.type === "task.save") sortTasks();
+        if (op.type.startsWith("session")) { saveSessionsLocal(); }
+        if (op.type.startsWith("task")) { sortTasks(); renderTasks(); renderCalendar(); }
+        if (op.type.startsWith("plan")) { renderPlan(); renderCalendar(); }
+      } catch (error) {
+        if (isNetworkError(error)) { console.warn("تعذر المزامنة الآن — سيُعاد لاحقًا.", error); return; }
+        console.warn("فشلت عملية مزامنة نهائيًا وحُذفت من الطابور.", op, error);
+        pendingOps.splice(index, 1);
+        persistQueue();
+      }
+    }
+    render();
+  }
+  function setOfflineTag(active) {
+    const tag = document.getElementById("offline-tag");
+    if (tag) tag.classList.toggle("hidden", !active);
+  }
+  window.addEventListener("online", () => {
+    setOfflineTag(false);
+    flushPendingOps();
+  });
+  window.addEventListener("offline", () => setOfflineTag(true));
+  setOfflineTag(navigator.onLine === false);
+
+  // جمل تحفيزية يومية: تتبدّل تلقائيًا كل يوم تقويمي.
+  const MILESTONE_QUOTES = [
+    "كل دقيقة تركيز تصنع فرقًا ✦",
+    "جلساتك... لها أثر يبقى 👣",
+    "كل دقيقة... تقرّبك إلى هدفك 🎯",
+    "قوة العزيمة... وقود النجاح 🎉",
+    "الصبر... مفتاح الفلاح 🌟",
+    "عشرون دقيقة الآن... تستحق ساعة الغد 💡",
+    "النقط الصغيرة... تجتمع لتصنع العظمة ✨",
+    "من يواصل يصل 🛤️",
+  ];
+
+  function renderHeroClock() {
+    const clockElement = document.querySelector("#hero-clock-time");
+    if (!clockElement) return;
+    clockElement.textContent = new Intl.DateTimeFormat("ar-SA", {
+      hour: "numeric", minute: "2-digit", hour12: true,
+    }).format(new Date());
+  }
+
+  function updateMilestoneQuote() {
+    const quoteElement = document.querySelector("#milestone-quote");
+    if (!quoteElement) return;
+    const now = new Date();
+    const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    const quote = MILESTONE_QUOTES[dayOfYear % MILESTONE_QUOTES.length];
+    quoteElement.textContent = quote;
+  }
+
   function updateTodayLabel() {
     const now = new Date();
     const gregorianDate = new Intl.DateTimeFormat("ar-SA", {
@@ -220,12 +439,12 @@
         day: "numeric", month: "long", year: "numeric",
       }).format(now);
     }
-    const currentTime = new Intl.DateTimeFormat("ar-SA", {
-      hour: "numeric", minute: "2-digit", hour12: true,
-    }).format(now);
-    const label = document.querySelector("#today-label");
-    label.textContent = `الميلادي: ${gregorianDate} · الهجري: ${hijriDate} · الوقت: ${currentTime}`;
-    label.dateTime = now.toISOString();
+    const gregorianSpan = document.querySelector("#hero-date-gregorian");
+    const hijriSpan = document.querySelector("#hero-date-hijri");
+    if (gregorianSpan) gregorianSpan.textContent = gregorianDate;
+    if (hijriSpan) hijriSpan.textContent = `${hijriDate} هجريًا`;
+    renderHeroClock();
+    updateMilestoneQuote();
     // حقل التاريخ لا يقبل تواريخ مستقبلية؛ نحدّث الحد الأقصى عند تغيّر اليوم.
     if (studyDateInput) studyDateInput.max = dateKey(now);
   }
@@ -674,6 +893,8 @@
       }
     }
     showMessage(cloudMessage, "أنت الآن في وضع المعاينة: كل ما تضيفه أو تعدّله يبقى في هذه الجلسة فقط.", true);
+    const settingsEmail = document.querySelector("#settings-email");
+    if (settingsEmail) settingsEmail.textContent = "وضع المعاينة — دون حساب";
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -705,12 +926,19 @@
       .order("study_date", { ascending: false })
       .order("created_at", { ascending: false });
     if (error) {
-      showMessage(cloudMessage, `تعذّر تحميل الجلسات. ${friendlyDbError(error)}`);
       console.error(error);
+      const cached = readCache(CACHE_KEYS.sessions);
+      if (isNetworkError(error) && cached?.length) {
+        sessions = cached;
+        showMessage(cloudMessage, "أنت دون اتصال — تُعرض بياناتك المحلية الأخيرة.");
+        render();
+        return;
+      }
+      showMessage(cloudMessage, `تعذّر تحميل الجلسات. ${friendlyDbError(error)}`);
       return;
     }
     sessions = data || [];
-    if (!silent) showMessage(cloudMessage, "تم تحميل جلساتك من حسابك.", true);
+    cacheAll();
     render();
   }
   async function handleAuth(event) {
@@ -838,17 +1066,26 @@
       return;
     }
     if (goalSaveButton) goalSaveButton.disabled = true;
-    const { data, error } = await supabaseClient.auth.updateUser({ data: { daily_goal: value } });
-    if (goalSaveButton) goalSaveButton.disabled = false;
-    if (error) {
+    try {
+      const { data, error } = await supabaseClient.auth.updateUser({ data: { daily_goal: value } });
+      if (error) throw error;
+      currentUser = data.user;
+      dailyGoal = value;
+      showMessage(goalMessage, "تم حفظ هدفك اليومي.", true);
+      render();
+      cacheAll();
+      return;
+    } catch (error) {
+      if (isNetworkError(error)) {
+        queueOfflineOp({ type: "goal", value });
+        showMessage(goalMessage, "أنت دون اتصال — سعّرنا هدفك محليًا وسيُزامن مع حسابك تلقائيًا.", true);
+        return;
+      }
       showMessage(goalMessage, friendlyAuthError(error));
       console.error(error);
-      return;
+    } finally {
+      if (goalSaveButton) goalSaveButton.disabled = false;
     }
-    currentUser = data.user;
-    dailyGoal = value;
-    showMessage(goalMessage, "تم حفظ هدفك اليومي.", true);
-    render();
   }
 
   async function setUser(user) {
@@ -867,12 +1104,16 @@
     signOutButton.classList.remove("hidden");
     themeToggle.classList.remove("hidden");
     settingsTopButton.classList.remove("hidden");
+    const settingsEmail = document.querySelector("#settings-email");
+    if (settingsEmail) settingsEmail.textContent = user.email || "—";
     const hashPage = window.location.hash.slice(1);
     navigateToPage(hashPage || "home", false);
     initializationPromise = (async () => {
       await loadSessions();
       await Promise.all([loadTasks(), loadPlan()]);
       initializedUserId = user.id;
+      // إكمال أي عمليات مؤجلة من زيارة دون اتصال قبل عرض البيانات.
+      flushPendingOps();
       // شاشة التعريف الأولى لا تظهر إلا بعد تسجيل الدخول.
       try {
         const alreadyOnboarded = localStorage.getItem("study-tracker-onboarded") === "true";
@@ -929,6 +1170,9 @@
     recoveryForm.reset();
     resetForm();
     setAuthMode(false);
+    const queueSnapshot = pendingOps.length;
+    clearAppCache();
+    if (!queueSnapshot) { pendingOps = []; persistQueue(); }
   }
 
   function exportCsv() {
@@ -1005,6 +1249,117 @@
       showMessage(settingsMessage, `تعذّر تجهيز النسخة. ${friendlyDbError(error)}`);
     } finally {
       exportAccountDataButton.disabled = false;
+    }
+  }
+
+  // ===== استيراد نسخة بيانات (JSON) =====
+  async function importAccountData(file) {
+    if (demoMode) return showMessage(settingsMessage, "الاستيراد متاح بعد تسجيل الدخول (خارج وضع المعاينة).");
+    if (!currentUser || !supabaseClient) return showMessage(settingsMessage, "سجّل الدخول أولًا لاستعادة نسخة بياناتك.");
+    let backup = null;
+    try {
+      backup = JSON.parse(await file.text());
+    } catch (error) {
+      return showMessage(settingsMessage, "الملف ليس نسخة JSON صحيحة. تأكد أنه الملف الذي نزّلته من التطبيق.");
+    }
+    if (!backup || backup.format !== "study-tracker-backup-v1") {
+      return showMessage(settingsMessage, "صيغة الملف غير معروفة — الاستيراد يعمل مع النسخ المنزّلة من هذا التطبيق.");
+    }
+    const backupSessions = Array.isArray(backup.sessions) ? backup.sessions.filter((item) => item && item.subject && item.duration) : [];
+    const backupTasks = Array.isArray(backup.tasks) ? backup.tasks.filter((item) => item && item.title) : [];
+    const backupPlan = Array.isArray(backup.weeklyPlan) ? backup.weeklyPlan.filter((item) => item && item.title) : [];
+    if (!backupSessions.length && !backupTasks.length && !backupPlan.length) {
+      return showMessage(settingsMessage, "الملف لا يحتوي بيانات قابلة للاستيراد.");
+    }
+    const totalItems = backupSessions.length + backupTasks.length + backupPlan.length;
+    const confirmed = window.confirm(`سيُضاف محتوى الملف إلى بياناتك الحالية دون حذف ما لديك:\n· ${backupSessions.length} جلسة\n· ${backupTasks.length} مهمة\n· ${backupPlan.length} بند خطة\n\nمتابعة؟`);
+    if (!confirmed) return;
+    importAccountDataButton.disabled = true;
+    showMessage(settingsMessage, "جارٍ استعادة بياناتك...");
+    const dupKey = (parts) => parts.map((part) => String(part ?? "").trim()).join("|");
+    const knownSessionKeys = new Set(sessions.map((item) => dupKey([item.subject, item.duration, item.study_date, item.created_at])));
+    const knownTaskKeys = new Set(tasks.map((item) => dupKey([item.title, item.due_date, item.created_at, item.done])));
+    const knownPlanKeys = new Set(planItems.map((item) => dupKey([item.weekday, item.title, item.start_time])));
+    let added = { sessions: 0, tasks: 0, plan: 0 };
+    try {
+      const freshSessions = backupSessions.filter((item) => !knownSessionKeys.has(dupKey([item.subject, item.duration, item.study_date, item.created_at])));
+      for (let i = 0; i < freshSessions.length; i += 100) {
+        const chunk = freshSessions.slice(i, i + 100).map((item) => ({
+          user_id: currentUser.id,
+          subject: String(item.subject).slice(0, 60),
+          duration: Math.min(1440, Math.max(1, Number(item.duration) || 1)),
+          note: item.note ? String(item.note).slice(0, 240) : null,
+          study_date: item.study_date || dateKey(),
+          created_at: item.created_at || new Date().toISOString(),
+        }));
+        const { error } = await supabaseClient.from("study_sessions").insert(chunk);
+        if (error) throw error;
+        added.sessions += chunk.length;
+      }
+      const freshTasks = backupTasks.filter((item) => !knownTaskKeys.has(dupKey([item.title, item.due_date, item.created_at, item.done])));
+      if (freshTasks.length) {
+        const mapped = freshTasks.slice(0, 500).map((item) => {
+          const entry = {
+            user_id: currentUser.id,
+            title: String(item.title).slice(0, 120),
+            due_date: item.due_date || null,
+            done: Boolean(item.done),
+            created_at: item.created_at || new Date().toISOString(),
+          };
+          if (tasksHaveExtras) {
+            entry.priority = item.priority || "normal";
+            entry.recurrence = item.recurrence || "none";
+          }
+          return entry;
+        });
+        try {
+          const { error } = await supabaseClient.from("tasks").insert(mapped);
+          if (error) throw error;
+          added.tasks += mapped.length;
+        } catch (insertError) {
+          if (/42703|column/i.test(String(insertError.message || ""))) {
+            const { error } = await supabaseClient.from("tasks").insert(mapped.map(({ priority, recurrence, ...rest }) => rest));
+            if (error) throw error;
+            added.tasks += mapped.length;
+          } else {
+            throw insertError;
+          }
+        }
+      }
+      const freshPlan = backupPlan.filter((item) => !knownPlanKeys.has(dupKey([item.weekday, item.title, item.start_time])));
+      if (freshPlan.length) {
+        const mapped = freshPlan.slice(0, 300).map((item) => ({
+          user_id: currentUser.id,
+          title: String(item.title).slice(0, 120),
+          weekday: Math.min(6, Math.max(0, Number(item.weekday))),
+          start_time: item.start_time || null,
+          created_at: item.created_at || new Date().toISOString(),
+        }));
+        const { error } = await supabaseClient.from("plan_items").insert(mapped);
+        if (error) throw error;
+        added.plan += mapped.length;
+      }
+      const backupGoal = Number(backup.dailyGoalMinutes);
+      if (Number.isInteger(backupGoal) && backupGoal >= 5 && backupGoal <= 1440 && backupGoal !== dailyGoal) {
+        await supabaseClient.auth.updateUser({ data: { daily_goal: backupGoal } });
+        dailyGoal = backupGoal;
+        if (goalInput) goalInput.value = backupGoal;
+      }
+      await loadSessions(true);
+      await Promise.all([loadTasks(), loadPlan()]);
+      const summary = [];
+      if (added.sessions) summary.push(`${arabicNumber(added.sessions)} جلسة`);
+      if (added.tasks) summary.push(`${arabicNumber(added.tasks)} مهمة`);
+      if (added.plan) summary.push(`${arabicNumber(added.plan)} بند خطة`);
+      showMessage(settingsMessage, summary.length
+        ? `تمت استعادة بياناتك وإضافتها إلى حسابك: ${summary.join(" و")}.`
+        : "كل بيانات الملف موجودة في حسابك أصلًا — لم يُضف شيء مكرر.", true);
+    } catch (error) {
+      console.error(error);
+      showMessage(settingsMessage, `تعذّر إكمال الاستيراد. ${friendlyDbError(error)}`);
+      await loadSessions(true).catch(() => {});
+    } finally {
+      importAccountDataButton.disabled = false;
     }
   }
 
@@ -1430,6 +1785,14 @@
         : supabaseClient.from("study_sessions").insert({ ...payload, user_id: currentUser.id }).select().single();
       const { data, error } = await request;
       if (error) {
+        if (isNetworkError(error)) {
+          const base = { subject, duration, note, study_date: studyDate };
+          if (editingId) queueOfflineOp({ type: "session.update", id: editingId, payload: base });
+          else queueOfflineOp({ type: "session.save", payload: { ...base, created_at: new Date().toISOString() }, localId: tempId() });
+          resetForm();
+          showMessage(message, "أنت دون اتصال الآن — حُفظت الجلسة على جهازك وستُزامن تلقائيًا عند عودة الإنترنت.", true);
+          return;
+        }
         showMessage(message, `تعذّر حفظ الجلسة. ${friendlyDbError(error)}`);
         console.error(error);
         return;
@@ -1442,6 +1805,19 @@
       resetForm();
       showMessage(message, wasEditing ? "تم حفظ التعديلات في حسابك." : "تم حفظ الجلسة في حسابك.", true);
     } catch (error) {
+      if (!demoMode && isNetworkError(error)) {
+        const wasEditing = Boolean(editingId);
+        const base = { subject, duration, note, study_date: studyDate };
+        if (wasEditing) {
+          queueOfflineOp({ type: "session.update", id: editingId, payload: base });
+        } else {
+          const localId = tempId();
+          queueOfflineOp({ type: "session.save", payload: { ...base, created_at: new Date().toISOString() }, localId });
+        }
+        resetForm();
+        showMessage(message, "أنت دون اتصال الآن — حُفظت الجلسة على جهازك وستُزامن تلقائيًا عند عودة الإنترنت.", true);
+        return;
+      }
       showMessage(message, "تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.");
       console.error(error);
     } finally {
@@ -1477,16 +1853,22 @@
         showMessage(message, "تم حذف الجلسة من المعاينة.", true);
         return;
       }
-      const { error } = await supabaseClient.from("study_sessions").delete().eq("id", id).eq("user_id", currentUser.id);
-      if (error) {
+      try {
+        const { error } = await supabaseClient.from("study_sessions").delete().eq("id", id).eq("user_id", currentUser.id);
+        if (error) throw error;
+        sessions = sessions.filter((entry) => entry.id !== id);
+        if (editingId === id) resetForm();
+        render();
+        showMessage(message, "تم حذف الجلسة من حسابك.", true);
+      } catch (error) {
+        if (isNetworkError(error)) {
+          queueOfflineOp({ type: "session.delete", id });
+          showMessage(message, "أنت دون اتصال — حُذفت الجلسة محليًا وسيُنفَّذ الحذف من حسابك عند عودة الإنترنت.", true);
+          return;
+        }
         showMessage(message, `تعذّر حذف الجلسة. ${friendlyDbError(error)}`);
         console.error(error);
-        return;
       }
-      sessions = sessions.filter((entry) => entry.id !== id);
-      if (editingId === id) resetForm();
-      render();
-      showMessage(message, "تم حذف الجلسة من حسابك.", true);
     }
   });
 
@@ -1562,12 +1944,21 @@
     }
     if (error) {
       console.error(error);
+      const cached = readCache(CACHE_KEYS.tasks);
+      if (isNetworkError(error) && cached) {
+        tasks = cached.map(normalizeTask);
+        sortTasks();
+        renderTasks();
+        showMessage(taskMessage, "أنت دون اتصال — تُعرض نسختك المحلية الأخيرة من المهام.");
+        return;
+      }
       showMessage(taskMessage, `تعذّر تحميل المهام. ${friendlyDbError(error)}`);
       return;
     }
     tasks = (data || []).map(normalizeTask);
     sortTasks();
     renderTasks();
+    cacheAll();
     if (!tasksHaveExtras) {
       showMessage(taskMessage, "لتفعيل الأولويات والتكرار: نفّذ تحديث الأعمدة في setup_supabase.sql.");
     }
@@ -1650,6 +2041,15 @@
         .select()
         .single();
       if (error) {
+        if (isNetworkError(error)) {
+          const localId = tempId();
+          queueOfflineOp({ type: "task.save", payload, localId, extras: extrasSaved });
+          taskForm.reset();
+          taskPriorityInput.value = "normal";
+          taskRepeatInput.value = "none";
+          showMessage(taskMessage, "أنت دون اتصال — حُفظت المهمة على جهازك وستُزامن تلقائيًا.", true);
+          return;
+        }
         showMessage(taskMessage, `تعذّر إضافة المهمة. ${friendlyDbError(error)}`);
         console.error(error);
         return;
@@ -1669,6 +2069,17 @@
         showMessage(taskMessage, "تمت إضافة المهمة إلى قائمتك.", true);
       }
     } catch (error) {
+      if (isNetworkError(error)) {
+        const localId = tempId();
+        const payload = { title, due_date: due };
+        if (extrasSaved) { payload.priority = priority; payload.recurrence = recurrence; }
+        queueOfflineOp({ type: "task.save", payload, localId, extras: extrasSaved });
+        taskForm.reset();
+        taskPriorityInput.value = "normal";
+        taskRepeatInput.value = "none";
+        showMessage(taskMessage, "أنت دون اتصال — حُفظت المهمة على جهازك وستُزامن تلقائيًا.", true);
+        return;
+      }
       showMessage(taskMessage, "تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.");
       console.error(error);
     } finally {
@@ -1715,38 +2126,52 @@
       const repeatLabel = TASK_REPEAT_LABEL[task.recurrence] || "";
       if (tasksHaveExtras && repeatLabel && !task.done) {
         const nextDue = rollRecurringTask(task);
-        const { data, error } = await supabaseClient
-          .from("tasks")
-          .update({ due_date: nextDue, done: false })
-          .eq("id", id)
-          .eq("user_id", currentUser.id)
-          .select()
-          .single();
-        if (error) {
+        try {
+          const { data, error } = await supabaseClient
+            .from("tasks")
+            .update({ due_date: nextDue, done: false })
+            .eq("id", id)
+            .eq("user_id", currentUser.id)
+            .select()
+            .single();
+          if (error) throw error;
+          tasks = tasks.map((entry) => (entry.id === id ? normalizeTask(data) : entry));
+        } catch (error) {
+          if (isNetworkError(error)) {
+            queueOfflineOp({ type: "task.update", id, patch: { due_date: nextDue, done: false } });
+            showMessage(taskMessage, `أنت دون اتصال — سُجّل الإنجاز والتكرار القادم ${dateShort(nextDue)} محليًا وستُزامن تلقائيًا.`, true);
+            return;
+          }
           showMessage(taskMessage, `تعذّر تحديث المهمة. ${friendlyDbError(error)}`);
           console.error(error);
           return;
         }
-        tasks = tasks.map((entry) => (entry.id === id ? normalizeTask(data) : entry));
         sortTasks();
         renderTasks();
         renderCalendar();
         showMessage(taskMessage, `أُنجزت هذه المرة ✦ التكرار القادم: ${dateShort(nextDue)}.`, true);
         return;
       }
-      const { data, error } = await supabaseClient
-        .from("tasks")
-        .update({ done: !task.done })
-        .eq("id", id)
-        .eq("user_id", currentUser.id)
-        .select()
-        .single();
-      if (error) {
+      try {
+        const { data, error } = await supabaseClient
+          .from("tasks")
+          .update({ done: !task.done })
+          .eq("id", id)
+          .eq("user_id", currentUser.id)
+          .select()
+          .single();
+        if (error) throw error;
+        tasks = tasks.map((entry) => (entry.id === id ? normalizeTask(data) : entry));
+      } catch (error) {
+        if (isNetworkError(error)) {
+          queueOfflineOp({ type: "task.update", id, patch: { done: !task.done } });
+          showMessage(taskMessage, "أنت دون اتصال — سُجّل الإنجاز محليًا وستُزامن تلقائيًا.", true);
+          return;
+        }
         showMessage(taskMessage, `تعذّر تحديث المهمة. ${friendlyDbError(error)}`);
         console.error(error);
         return;
       }
-      tasks = tasks.map((entry) => (entry.id === id ? normalizeTask(data) : entry));
       sortTasks();
       renderTasks();
       renderCalendar();
@@ -1754,8 +2179,15 @@
     }
     if (event.target.closest(".task-delete")) {
       if (!window.confirm("هل تريد حذف هذه المهمة؟")) return;
-      const { error } = await supabaseClient.from("tasks").delete().eq("id", id).eq("user_id", currentUser.id);
-      if (error) {
+      try {
+        const { error } = await supabaseClient.from("tasks").delete().eq("id", id).eq("user_id", currentUser.id);
+        if (error) throw error;
+      } catch (error) {
+        if (isNetworkError(error)) {
+          queueOfflineOp({ type: "task.delete", id });
+          showMessage(taskMessage, "أنت دون اتصال — حُذفت المهمة محليًا وستُزامن تلقائيًا.", true);
+          return;
+        }
         showMessage(taskMessage, `تعذّر حذف المهمة. ${friendlyDbError(error)}`);
         console.error(error);
         return;
@@ -1777,12 +2209,21 @@
       .order("start_time", { ascending: true, nullsFirst: false });
     if (error) {
       console.error(error);
+      const cached = isNetworkError(error) ? readCache(CACHE_KEYS.plan) : readCache(CACHE_KEYS.plan);
+      if (isNetworkError(error) && cached) {
+        planItems = cached;
+        showMessage(planMessage, "أنت دون اتصال — تُعرض نسختك المحلية الأخيرة من الخطة.");
+        renderPlan();
+        renderCalendar();
+        return;
+      }
       showMessage(planMessage, `تعذّر تحميل الخطة. ${friendlyDbError(error)}`);
       return;
     }
     planItems = data || [];
     renderPlan();
     renderCalendar();
+    cacheAll();
   }
 
   function renderPlan() {
@@ -1834,6 +2275,12 @@
         .select()
         .single();
       if (error) {
+        if (isNetworkError(error)) {
+          queueOfflineOp({ type: "plan.save", payload: { title, weekday, start_time: startTime }, localId: tempId() });
+          planForm.reset();
+          showMessage(planMessage, `أنت دون اتصال — أُضيف البند إلى ${WEEK_NAMES[weekday]} محليًا وستُزامن تلقائيًا.`, true);
+          return;
+        }
         showMessage(planMessage, `تعذّر إضافة البند. ${friendlyDbError(error)}`);
         console.error(error);
         return;
@@ -1844,6 +2291,13 @@
       planForm.reset();
       showMessage(planMessage, `تمت إضافة البند إلى ${WEEK_NAMES[weekday]}.`, true);
     } catch (error) {
+      if (!demoMode && isNetworkError(error)) {
+        const localId = tempId();
+        queueOfflineOp({ type: "plan.save", payload: { title, weekday, start_time: startTime }, localId });
+        planForm.reset();
+        showMessage(planMessage, `أنت دون اتصال — أُضيف البند إلى ${WEEK_NAMES[weekday]} محليًا وستُزامن تلقائيًا.`, true);
+        return;
+      }
       showMessage(planMessage, "تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.");
       console.error(error);
     } finally {
@@ -1868,15 +2322,21 @@
       showMessage(planMessage, "تم حذف البند من خطة المعاينة.", true);
       return;
     }
-    const { error } = await supabaseClient.from("plan_items").delete().eq("id", item.dataset.id).eq("user_id", currentUser.id);
-    if (error) {
-      showMessage(planMessage, `تعذّر حذف البند. ${friendlyDbError(error)}`);
+    try {
+      const { error } = await supabaseClient.from("plan_items").delete().eq("id", item.dataset.id).eq("user_id", currentUser.id);
+      if (error) throw error;
+      planItems = planItems.filter((entry) => entry.id !== item.dataset.id);
+      renderPlan();
+      showMessage(planMessage, "تم حذف البند من خطتك.", true);
+    } catch (error) {
+      if (isNetworkError(error)) {
+        queueOfflineOp({ type: "plan.delete", id: item.dataset.id });
+        showMessage(planMessage, "أنت دون اتصال — حُذف البند محليًا وستُزامن تلقائيًا.", true);
+        return;
+      }
+      showMessage(planMessage, `تعذّر تحديث البند. ${friendlyDbError(error)}`);
       console.error(error);
-      return;
     }
-    planItems = planItems.filter((entry) => entry.id !== item.dataset.id);
-    renderPlan();
-    showMessage(planMessage, "تم حذف البند من خطتك.", true);
   });
 
   // ===== التقويم الشهري =====
@@ -1997,6 +2457,15 @@
   if (goalSaveButton) goalSaveButton.addEventListener("click", saveGoal);
   timerToggle.addEventListener("click", toggleTimer);
   exportAccountDataButton.addEventListener("click", exportAccountData);
+  if (importAccountDataButton && importFileInput) {
+    importAccountDataButton.addEventListener("click", () => importFileInput.click());
+    importFileInput.addEventListener("change", () => {
+      const file = importFileInput.files?.[0];
+      if (file) importAccountData(file);
+      importFileInput.value = "";
+    });
+  }
+  syncNotifyUi();
   document.querySelector("#export-csv").addEventListener("click", exportCsv);
 
   // التبديل السريع بين الوضع النهاري والليلي من الشريط العلوي
@@ -2074,6 +2543,284 @@
     if (event.key === "Escape" && !onboardingModal.classList.contains("hidden")) finishOnboarding();
   });
 
+  // ===== تنبيهات المهام ومواقيت الخطة (اختيارية) =====
+  const NOTIFY_PREF_KEY = "study-tracker-notify";
+  function notifyPrefsEnabled() {
+    try { return localStorage.getItem(NOTIFY_PREF_KEY) === "on"; } catch { return false; }
+  }
+  function setNotifyPref(on) {
+    try {
+      if (on) localStorage.setItem(NOTIFY_PREF_KEY, "on");
+      else localStorage.removeItem(NOTIFY_PREF_KEY);
+    } catch { /* ignore */ }
+    syncNotifyUi();
+  }
+  function showAppNotification(title, body, tag) {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const options = { body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: tag || `iitimaal-${Date.now()}` };
+    if (navigator.serviceWorker?.getRegistration) {
+      navigator.serviceWorker.getRegistration()
+        .then((registration) => {
+          if (registration?.showNotification) return registration.showNotification(title, options);
+          try { new Notification(title, options); } catch (error) { console.warn(error); }
+          return undefined;
+        })
+        .catch(() => {
+          try { new Notification(title, options); } catch (error) { console.warn(error); }
+        });
+    } else {
+      try { new Notification(title, options); } catch (error) { console.warn(error); }
+    }
+  }
+  function syncNotifyUi() {
+    if (!notifyToggle) return;
+    const supported = "Notification" in window;
+    if (!supported) {
+      notifyToggle.disabled = true;
+      if (notifyStatus) notifyStatus.textContent = "متصفحك لا يدعم تنبيهات الويب إن كان قديمًا جدًا — التطبيق يعمل دونها.";
+      return;
+    }
+    const permission = Notification.permission;
+    const enabled = notifyPrefsEnabled() && permission === "granted";
+    notifyToggle.disabled = permission === "denied";
+    if (!notifyToggle.disabled && !enabled) notifyToggle.disabled = false;
+    notifyToggle.textContent = enabled ? "إيقاف التنبيهات" : "تفعيل التنبيهات";
+    if (notifyStatus) {
+      if (permission === "denied") notifyStatus.textContent = "خيار التنبيه محظور من إعدادات المتصفح لهذا الموقع.";
+      else if (enabled) notifyStatus.textContent = "التنبيهات مفعّلة: مهام اليوم وأوقات خطتك ✦";
+      else if (permission === "granted") notifyStatus.textContent = "الإذن ممنوح — فعّل زر التنبيهات للتذكير.";
+      else notifyStatus.textContent = "سيطلب المتصفح إذنك عند التفعيل.";
+    }
+  }
+  if (notifyToggle) {
+    notifyToggle.addEventListener("click", async () => {
+      if (!("Notification" in window)) return syncNotifyUi();
+      const permission = Notification.permission;
+      if (permission === "denied") return syncNotifyUi();
+      if (notifyPrefsEnabled()) {
+        setNotifyPref(false);
+        return;
+      }
+      try {
+        const result = permission === "granted" ? "granted" : await Notification.requestPermission();
+        if (result === "granted") {
+          setNotifyPref(true);
+          showAppNotification("اجتماع النقط", "تم تفعيل التنبيهات — سنذكّرك بمهامك وأوقات خطتك ✦", "iitimaal-welcome");
+        } else {
+          syncNotifyUi();
+        }
+      } catch (error) {
+        console.warn("تعذر طلب إذن التنبيهات.", error);
+        syncNotifyUi();
+      }
+    });
+  }
+  function checkReminders() {
+    if (!notifyPrefsEnabled() || !("Notification" in window) || Notification.permission !== "granted") return;
+    if (!currentUser || demoMode) return;
+    const now = new Date();
+    const today = dateKey(now);
+    // ملخص مهام اليوم: مرة واحدة يوميًا بعد الفجر.
+    if (now.getHours() >= 5) {
+      let digestKey = null;
+      try { digestKey = localStorage.getItem("study-tracker-notify-digest"); } catch { /* ignore */ }
+      if (digestKey !== today) {
+        const dueToday = tasks.filter((task) => !task.done && task.due_date === today).length;
+        const overdue = tasks.filter((task) => !task.done && task.due_date && task.due_date < today).length;
+        const planToday = planItems.filter((item) => item.weekday === now.getDay());
+        const parts = [];
+        if (dueToday) parts.push(`${arabicNumber(dueToday)} ${dueToday === 1 ? "مهمة مستحقة اليوم" : "مهام مستحقة اليوم"}`);
+        if (overdue) parts.push(`${arabicNumber(overdue)} ${overdue === 1 ? "مهمة متأخرة" : "مهام متأخرة"}`);
+        if (planToday.length) parts.push(`${arabicNumber(planToday.length)} ${planToday.length === 1 ? "بند خطة لهذا اليوم" : "بنود خطة لهذا اليوم"}`);
+        showAppNotification("مهام اليوم في اجتماع النقط", parts.length ? parts.join(" · ") : "لا مهام اليوم — إجازة محققة أو بداية جديدة ✦", "iitimaal-digest");
+        try { localStorage.setItem("study-tracker-notify-digest", today); } catch { /* ignore */ }
+      }
+    }
+    // مواقيت الخطة: تنبيه خلال ١٥ دقيقة من وقت البند.
+    planItems.filter((item) => item.weekday === now.getDay() && item.start_time).forEach((item) => {
+      const fireKey = `study-tracker-notify-plan-${today}-${item.id}`;
+      let fired = false;
+      try { fired = localStorage.getItem(fireKey) === "1"; } catch { /* ignore */ }
+      if (fired) return;
+      const [hours, minutes] = String(item.start_time).split(":").map(Number);
+      const due = new Date(now);
+      due.setHours(hours, minutes, 0, 0);
+      const diffMinutes = (now - due) / 60000;
+      if (diffMinutes >= 0 && diffMinutes <= 15) {
+        showAppNotification("وقت بند الخطة ⏰", `${item.title} — ${WEEK_NAMES[item.weekday]} ${item.start_time}`, "iitimaal-plan");
+        try { localStorage.setItem(fireKey, "1"); } catch { /* ignore */ }
+      }
+    });
+  }
+  setInterval(checkReminders, 60_000);
+
+  // ===== تقرير الأسبوع: توليد صورة للمشاركة =====
+  function computeStreak(allSessions) {
+    const studiedDays = new Set(allSessions.map((session) => session.study_date));
+    let cursor = new Date();
+    if (!studiedDays.has(dateKey(cursor))) cursor = addDays(cursor, -1);
+    let streak = 0;
+    while (studiedDays.has(dateKey(cursor))) {
+      streak += 1;
+      cursor = addDays(cursor, -1);
+    }
+    return streak;
+  }
+  async function generateWeeklyReport() {
+    const today = new Date();
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const day = addDays(today, -i);
+      days.push({ key: dateKey(day), label: weekdayShort(day), minutes: minutesForDate(dateKey(day)), isToday: i === 0 });
+    }
+    const totalMinutes = days.reduce((sum, day) => sum + day.minutes, 0);
+    const weekKeys = new Set(days.map((day) => day.key));
+    const weekSessions = sessions.filter((session) => weekKeys.has(session.study_date));
+    const subjectTotals = new Map();
+    weekSessions.forEach((session) => subjectTotals.set(session.subject, (subjectTotals.get(session.subject) || 0) + Number(session.duration || 0)));
+    const topSubject = [...subjectTotals.entries()].sort((a, b) => b[1] - a[1])[0];
+    const streak = computeStreak(sessions);
+    showMessage(cloudMessage, "جارٍ رسم صورة ملخص الأسبوع...");
+
+    const width = 1080;
+    const height = 1350;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if ("direction" in ctx) ctx.direction = "rtl";
+    try {
+      await Promise.all([
+        document.fonts?.load("700 64px 'Aref Ruqaa'"),
+        document.fonts?.load("700 52px 'IBM Plex Sans Arabic'"),
+        document.fonts?.load("400 34px 'IBM Plex Sans Arabic'"),
+      ]);
+    } catch { /* الخطوط الاحتياطية تكفي */ }
+
+    const background = ctx.createLinearGradient(0, 0, 0, height);
+    background.addColorStop(0, "#0b534a");
+    background.addColorStop(0.55, "#0e5c54");
+    background.addColorStop(1, "#083c36");
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = "rgba(185, 138, 47, 0.55)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(38, 38, width - 76, height - 76);
+    ctx.fillStyle = "rgba(185, 138, 47, 0.14)";
+    ctx.fillRect(38, 38, width - 76, height - 76);
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#e8c469";
+    ctx.font = "700 92px 'Aref Ruqaa', 'IBM Plex Sans Arabic', serif";
+    ctx.fillText("اجتماع النقط", width / 2, 178);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.font = "400 38px 'IBM Plex Sans Arabic', sans-serif";
+    ctx.fillText(`ملخص أسبوعي للانضباط الدراسي · ${dateShort(days[0].key)} — ${dateShort(days[6].key)}`, width / 2, 246);
+
+    const cards = [
+      { label: "دقائق الدراسة", value: arabicNumber(totalMinutes) },
+      { label: "جلسات الأسبوع", value: arabicNumber(weekSessions.length) },
+      { label: "أيام متتابعة", value: arabicNumber(streak) },
+      { label: "أكثر مادة", value: topSubject ? topSubject[0] : "—" },
+    ];
+    const cardWidth = (width - 76 - 60) / 4;
+    cards.forEach((card, index) => {
+      const cardX = width - 38 - 52 - index * (cardWidth + 20) - cardWidth + 26;
+      const cardCenter = cardX + cardWidth / 2;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+      const radius = 22;
+      const y = 320;
+      const h = 190;
+      ctx.beginPath();
+      ctx.moveTo(cardX + radius, y);
+      ctx.lineTo(cardX + cardWidth - radius, y);
+      ctx.quadraticCurveTo(cardX + cardWidth, y, cardX + cardWidth, y + radius);
+      ctx.lineTo(cardX + cardWidth, y + h - radius);
+      ctx.quadraticCurveTo(cardX + cardWidth, y + h, cardX + cardWidth - radius, y + h);
+      ctx.lineTo(cardX + radius, y + h);
+      ctx.quadraticCurveTo(cardX, y + h, cardX, y + h - radius);
+      ctx.lineTo(cardX, y + radius);
+      ctx.quadraticCurveTo(cardX, y, cardX + radius, y);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+      ctx.font = "400 30px 'IBM Plex Sans Arabic', sans-serif";
+      ctx.fillText(card.label, cardCenter, y + 62);
+      ctx.fillStyle = "#f4d98f";
+      ctx.font = "700 46px 'IBM Plex Sans Arabic', sans-serif";
+      const valueText = card.value.length > 10 ? `${card.value.slice(0, 9)}…` : card.value;
+      ctx.fillText(valueText, cardCenter, y + 128);
+    });
+
+    const chartLeft = width - 38 - 60;
+    const chartRight = 38 + 60;
+    const chartWidth = chartLeft - chartRight;
+    const chartTop = 590;
+    const chartBottom = 1020;
+    const maxMinutes = Math.max(60, ...days.map((day) => day.minutes));
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.font = "700 40px 'IBM Plex Sans Arabic', sans-serif";
+    ctx.fillText("دقائق الدراسة في الأسبوع", width / 2, 540);
+    days.forEach((day, index) => {
+      const slot = chartWidth / 7;
+      const barWidth = Math.min(72, slot * 0.56);
+      const barCenter = chartRight + slot * (6.5 - index);
+      const barHeight = day.minutes ? Math.max(14, ((day.minutes / maxMinutes) * (chartBottom - chartTop))) : 10;
+      ctx.fillStyle = day.minutes ? (day.isToday ? "#f4d98f" : "rgba(255, 255, 255, 0.65)") : "rgba(255, 255, 255, 0.16)";
+      const barX = barCenter - barWidth / 2;
+      const barY = chartBottom - barHeight;
+      const r = 10;
+      ctx.beginPath();
+      ctx.moveTo(barX + r, barY);
+      ctx.lineTo(barX + barWidth - r, barY);
+      ctx.quadraticCurveTo(barX + barWidth, barY, barX + barWidth, barY + Math.min(r, barHeight / 2));
+      ctx.lineTo(barX + barWidth, chartBottom);
+      ctx.lineTo(barX, chartBottom);
+      ctx.lineTo(barX, barY + Math.min(r, barHeight / 2));
+      ctx.quadraticCurveTo(barX, barY, barX + r, barY);
+      ctx.fill();
+      if (day.minutes) {
+        ctx.fillStyle = "#f4d98f";
+        ctx.font = "700 28px 'IBM Plex Sans Arabic', sans-serif";
+        ctx.fillText(arabicNumber(day.minutes), barCenter, barY - 14);
+      }
+      ctx.fillStyle = day.isToday ? "#f4d98f" : "rgba(255, 255, 255, 0.8)";
+      ctx.font = "400 30px 'IBM Plex Sans Arabic', sans-serif";
+      ctx.fillText(day.label, barCenter, chartBottom + 48);
+    });
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+    ctx.font = "400 30px 'IBM Plex Sans Arabic', sans-serif";
+    ctx.fillText("اجتماع النقط — تطوير: أبو عمر الأثري", width / 2, 1264);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return showMessage(cloudMessage, "تعذّر توليد الصورة على هذا المتصفح.");
+      const fileName = `iitimaal-week-${dateKey()}.png`;
+      const file = new File([blob], fileName, { type: "image/png" });
+      try {
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], title: "اجتماع النقط — ملخص أسبوعي" });
+          showMessage(cloudMessage, "تم تجهيز الصورة وفتح خيار المشاركة.", true);
+          return;
+        }
+      } catch (error) {
+        console.warn("تعذّر فتح المشاركة، سننزّل الصورة بدلًا منها.", error);
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showMessage(cloudMessage, "تم تنزيل صورة ملخص الأسبوع على هذا الجهاز.", true);
+    }, "image/png");
+
+    if (weeklyReportButton) weeklyReportButton.disabled = false;
+  }
+  if (weeklyReportButton) weeklyReportButton.addEventListener("click", generateWeeklyReport);
+
+  // فحص التنبيهات عند بدء الجلسة أول مرة
+  setTimeout(checkReminders, 20_000);
+
   signOutButton.addEventListener("click", async () => {
     if (demoMode) {
       exitDemo();
@@ -2093,6 +2840,59 @@
     } finally {
       signOutButton.disabled = false;
       showSignedOut();
+    }
+  });
+
+  // ===== حذف الحساب والبيانات ذاتيًا من الإعدادات (دون مراسلة المطوّر) =====
+  const deleteAccountButton = document.querySelector("#delete-account-btn");
+  const deleteAccountMessage = document.querySelector("#delete-account-message");
+
+  deleteAccountButton.addEventListener("click", async () => {
+    if (demoMode) {
+      return showMessage(deleteAccountMessage, "أنت في وضع المعاينة، ولا توجد بيانات حقيقية لحذفها. أنشئ حسابك أولًا ثم استخدم هذا الزر.");
+    }
+    if (!supabaseClient || !currentUser?.id) return;
+    if (!window.confirm("سيُحذف حسابك نهائيًا مع كل جلساتك ومهامك وخطتك وهدفك اليومي. هل تريد المتابعة؟")) return;
+    if (!window.confirm("تأكيد أخير: هذا الإجراء نهائي ولا يمكن التراجع عنه. هل أنت متأكد تمامًا؟")) return;
+    deleteAccountButton.disabled = true;
+    showMessage(deleteAccountMessage, "جارٍ حذف حسابك وبياناتك نهائيًا...");
+    try {
+      // 1) حذف كل السجلات المرتبطة بالحساب (لكل مستخدم حق حذف سجلاته فقط).
+      const [sessionsResult, tasksResult, planResult] = await Promise.all([
+        supabaseClient.from("study_sessions").delete().eq("user_id", currentUser.id),
+        supabaseClient.from("tasks").delete().eq("user_id", currentUser.id),
+        supabaseClient.from("plan_items").delete().eq("user_id", currentUser.id),
+      ]);
+      const dataError = sessionsResult.error || tasksResult.error || planResult.error;
+      if (dataError) throw dataError;
+      // 2) تسوية طابور المزامنة والذاكرة المحلية، ثم حذف الحساب هو نفسه.
+      pendingOps = [];
+      persistQueue();
+      clearAppCache();
+      const { error: accountError } = await supabaseClient.rpc("delete_own_account");
+      await supabaseClient.auth.signOut({ scope: "local" }).catch(() => {});
+      if (accountError) {
+        const notFound = /PGRST202|42883|function .* does not exist/i.test(`${accountError.code || ""} ${accountError.message || ""}`);
+        console.error(accountError);
+        showSignedOut();
+        if (notFound) {
+          showMessage(authMessage, "حُذفت كل بياناتك (الجلسات والمهام والخطة) من حسابك. لإكمال حذف الحساب نفسه، شغّل النسخة المحدثة من setup_supabase.sql في Supabase مرة واحدة، أو راسل المطوّر.");
+        } else {
+          showMessage(authMessage, `حُذفت بياناتك الدراسية، وتعذر حذف الحساب نفسه. ${friendlyDbError(accountError)}`);
+        }
+        return;
+      }
+      showSignedOut();
+      showMessage(authMessage, "تم حذف حسابك وكل بياناته نهائيًا. يمكنك إنشاء حساب جديد في أي وقت ✦", true);
+    } catch (error) {
+      console.error(error);
+      if (isNetworkError(error)) {
+        showMessage(deleteAccountMessage, "تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.");
+      } else {
+        showMessage(deleteAccountMessage, `تعذّر حذف بياناتك الآن. ${friendlyDbError(error)}`);
+      }
+    } finally {
+      deleteAccountButton.disabled = false;
     }
   });
 
@@ -2231,6 +3031,7 @@
 
   updateTodayLabel();
   window.setInterval(updateTodayLabel, 60_000);
+  window.setInterval(renderHeroClock, 1000);
   studyDateInput.value = dateKey();
   studyDateInput.max = dateKey();
 

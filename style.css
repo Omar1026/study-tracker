@@ -400,6 +400,24 @@ textarea { resize: vertical; min-height: 79px; }
 .data-tools .button { margin-top: 12px; }
 .data-tools .setting-help { margin-top: 9px; }
 .data-tools a { display: inline-block; margin-top: 7px; color: var(--teal); }
+
+/* ===== التنبيهات + شريط دون اتصال + زر التقرير ===== */
+.notify-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 11px; }
+.notify-row .button { margin: 0; }
+.notify-row .setting-help { margin: 0; }
+.offline-tag {
+  position: fixed; z-index: 70; inset-inline-start: 14px; inset-block-end: 14px;
+  display: inline-flex; align-items: center; gap: 8px; max-width: min(86vw, 420px);
+  padding: 9px 14px; border: 1px solid var(--gold); border-radius: 999px;
+  background: var(--paper); color: var(--ink); font-size: .78rem; font-weight: 700;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .18);
+}
+.offline-tag span[aria-hidden] { color: var(--gold); font-size: 1rem; }
+body[data-theme="night"] .offline-tag { background: #22302c; border-color: var(--gold); }
+.report-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
+.report-row .button { margin: 0; }
+.report-row .setting-help { margin: 0; }
+@media (max-width: 640px) { .offline-tag { inset-inline-start: auto; inset-inline-end: 12px; inset-block-end: 12px; font-size: .7rem; } }
 body[data-theme="night"] .footer-link,
 body[data-theme="night"] .footer-suggestion a:hover { color: var(--gold); }
 body[data-theme="night"] .footer-sep { background: var(--line); }
@@ -1380,3 +1398,215 @@ body[data-theme="night"] .task-tag.is-repeat { color: var(--gold); }
   .task-meta { gap: 5px; }
   .task-tag { font-size: .65rem; padding: 2px 7px; }
 }
+
+/* ===== بطاقة الترحيب الرئيسية (الشاشة الرئيسية) ===== */
+.home-hero-block { margin: 4px 0 0; }
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 26px 24px;
+  border-radius: 26px;
+  color: #fff;
+  background: linear-gradient(150deg, var(--teal) 0%, var(--teal-dark) 118%);
+  box-shadow: 0 20px 48px rgba(14, 92, 84, .28);
+  border: 1px solid rgba(255, 255, 255, .16);
+}
+.hero-card::before,
+.hero-card::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero-card::before {
+  inset-inline-end: -80px; top: -110px;
+  width: 260px; height: 260px;
+  background: rgba(255, 255, 255, .09);
+}
+.hero-card::after {
+  inset-inline-start: -60px; bottom: -120px;
+  width: 210px; height: 210px;
+  background: rgba(255, 255, 255, .07);
+}
+.hero-main {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 16px;
+}
+.hero-brand {
+  flex: 0 0 auto;
+  display: grid; place-items: center;
+  width: 60px; height: 60px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .18);
+  border: 1px solid rgba(255, 255, 255, .35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
+  font-size: 2rem; font-weight: 800; line-height: 1;
+}
+.hero-titles { min-width: 0; }
+.hero-titles h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 5.5vw, 2.35rem);
+  font-weight: 800; letter-spacing: -.02em; line-height: 1.12;
+}
+.hero-tagline { margin: 7px 0 0; font-size: .95rem; font-weight: 700; color: rgba(255, 255, 255, .95); }
+.hero-subtext { margin: 3px 0 0; font-size: .8rem; color: rgba(255, 255, 255, .74); line-height: 1.6; }
+
+.hero-date-bar {
+  position: relative; z-index: 1;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 20px; padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .13);
+  border: 1px solid rgba(255, 255, 255, .22);
+  font-size: .78rem; font-weight: 600;
+}
+.hero-date-bar .icon { width: 16px; height: 16px; flex: 0 0 auto; }
+.hero-date-sep { opacity: .5; }
+
+.hero-clock {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-top: 10px; padding: 10px 22px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .17);
+  border: 1px solid rgba(255, 255, 255, .3);
+  font-size: 1.65rem; font-weight: 800; letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+.hero-clock .icon { width: 22px; height: 22px; }
+
+.hero-card .home-cta { margin: 18px 0 0; }
+.hero-card .quick-start-btn {
+  background: #fff;
+  color: var(--teal);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+.hero-card .quick-start-btn:hover { box-shadow: 0 16px 36px rgba(0, 0, 0, .24); }
+.hero-card .quick-start-icon { background: var(--teal-soft); color: var(--teal); }
+.hero-card .quick-start-btn small { color: rgba(0, 0, 0, .55); }
+
+.hero-card .install-chip {
+  margin-top: 12px;
+  border-color: rgba(255, 255, 255, .4);
+  color: #fff;
+  background: rgba(255, 255, 255, .12);
+}
+.hero-card .install-chip:not(.can-install):hover { border-color: rgba(255, 255, 255, .6); color: #fff; }
+
+@media (max-width: 760px) {
+  .hero-card { padding: 20px 18px 18px; border-radius: 22px; }
+  .hero-brand { width: 50px; height: 50px; border-radius: 15px; font-size: 1.6rem; }
+  .hero-main { gap: 12px; }
+  .hero-titles h1 { font-size: 1.55rem; }
+  .hero-tagline { font-size: .85rem; }
+  .hero-subtext { font-size: .74rem; }
+  .hero-date-bar { margin-top: 15px; font-size: .7rem; padding: 8px 11px; }
+  .hero-clock { margin-top: 9px; padding: 8px 16px; font-size: 1.25rem; border-radius: 13px; }
+  .hero-clock .icon { width: 17px; height: 17px; }
+}
+
+body[data-theme="night"] .hero-card {
+  background: linear-gradient(150deg, color-mix(in srgb, var(--teal-dark) 40%, #141d1a), #141d1a);
+  border-color: rgba(255, 255, 255, .1);
+}
+body[data-theme="night"] .quick-start-btn { background: rgba(255, 255, 255, .92); }
+
+/* ===== الجملة التحفيزية اليومية (تتغير كل يوم) ===== */
+.milestone-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 18px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, var(--gold-soft), var(--paper));
+  border: 1px solid rgba(185, 138, 47, .4);
+  box-shadow: 0 10px 26px rgba(185, 138, 47, .1);
+}
+.milestone-icon {
+  flex: 0 0 auto;
+  display: grid; place-items: center;
+  width: 36px; height: 36px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  background: var(--gold);
+  color: #fff;
+}
+.milestone-text { margin: 0; color: var(--ink); font-size: .93rem; font-weight: 700; line-height: 1.6; }
+body[data-theme="night"] .milestone-card { background: linear-gradient(120deg, #3c3421, var(--paper)); border-color: rgba(228, 189, 101, .35); }
+body[data-theme="night"] .milestone-text { color: var(--gold); }
+
+/* ===== التذييل: الترتيب العمودي المنظم ===== */
+.site-footer {
+  display: grid;
+  gap: 9px;
+  justify-items: center;
+}
+.footer-privacy { color: var(--muted); font-weight: 700; }
+.footer-dev { margin: 0; font-size: 0.75rem; font-weight: 600; color: var(--muted); }
+.footer-contact { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; }
+.footer-mail { color: var(--muted); }
+.footer-suggest {
+  font-size: 0.64rem; font-weight: 600; line-height: 1.8;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted); text-decoration: none;
+  transition: color .18s, border-color .18s;
+}
+.footer-suggest:hover { color: var(--teal); border-color: var(--teal); }
+body[data-theme="night"] .footer-suggest:hover { color: var(--gold); border-color: var(--gold); }
+
+/* ===== الإعدادات: قسم «حسابي» ومنطقة الحذف النهائي ===== */
+.account-row {
+  display: flex; align-items: center; gap: 13px;
+  margin-top: 13px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--teal-soft);
+}
+.account-icon {
+  display: grid; place-items: center;
+  flex: 0 0 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--teal);
+  color: #fff; font-size: 1.05rem;
+}
+.account-label { margin: 0; color: var(--muted); font-size: .7rem; font-weight: 700; }
+.account-row strong { display: block; margin-top: 2px; font-size: .95rem; color: var(--ink); overflow-wrap: anywhere; }
+body.is-demo .account-tools { display: none; }
+body.is-demo .danger-zone { display: none; }
+.danger-zone {
+  margin-top: 16px;
+  padding: 14px 15px;
+  border: 1px solid rgba(178, 58, 46, .35);
+  border-radius: 14px;
+  background: rgba(178, 58, 46, .06);
+}
+body[data-theme="night"] .danger-zone { border-color: rgba(240, 150, 140, .4); background: rgba(240, 150, 140, .08); }
+.danger-zone .setting-help { color: #8a3a30; }
+body[data-theme="night"] .danger-zone .setting-help { color: #f0a199; }
+.danger-btn {
+  margin-top: 11px;
+  width: 100%; justify-content: center;
+  background: #b23a2e; color: #fff;
+  border: 1px solid transparent;
+  box-shadow: 0 8px 18px rgba(178, 58, 46, .25);
+}
+.danger-btn:hover { background: #9a2f24; box-shadow: 0 10px 22px rgba(178, 58, 46, .32); }
+.danger-btn:disabled { background: var(--muted); color: rgba(255, 255, 255, .75); box-shadow: none; }
+.danger-zone .form-message { margin-top: 9px; }
+
+/* ===== تحسينات إضافية للبطاقات ===== */
+.poem-card { border: 2px solid rgba(185, 138, 47, .55); }
+.poem-ornament {
+  display: grid; place-items: center;
+  width: 40px; height: 40px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fff;
+  font-size: 1.05rem;
+  box-shadow: 0 6px 16px rgba(185, 138, 47, .35);
+}
+.poem-card .poem-verse i { font-size: .9em; }
+body[data-theme="night"] .poem-ornament { background: var(--gold); color: #111b17; }

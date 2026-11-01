@@ -127,3 +127,26 @@ create policy "Students can delete their own plans"
 on public.plan_items for delete to authenticated
 using ((select auth.uid()) = user_id);
 
+-- حذف الحساب ذاتيًا: يتيح للمستخدم حذف حسابه وكل بياناته نهائيًا من صفحة الإعدادات.
+-- حذف سجل auth.users يزيل تلقائيًا كل الصفوف المرتبطة (on delete cascade).
+create or replace function public.delete_own_account()
+returns void
+language plpgsql
+security definer
+set search_path = 'auth', 'public'
+as $$
+declare
+  uid uuid;
+begin
+  uid := auth.uid();
+  if uid is null then
+    raise exception 'not_authenticated';
+  end if;
+  perform auth.admin.delete_user(uid);
+end;
+$$;
+
+revoke execute on function public.delete_own_account() from public, anon;
+grant execute on function public.delete_own_account() to authenticated;
+
+
