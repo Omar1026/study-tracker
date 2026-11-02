@@ -178,11 +178,21 @@ body {
 .home-shortcuts button:hover { border-color: var(--teal); }
 .home-shortcuts button > span { color: var(--teal); font-size: 1.5em; }
 .home-shortcuts small { color: var(--muted); }
+/* ===== الإعدادات: مجموعات مفصلة باحترافية ===== */
 .settings-panel { max-width: 740px; margin: 0 auto; width: 100%; }
-.setting-group { margin: 0; padding: 0 0 18px; border: 0; border-bottom: 1px solid var(--line); }
+.setting-group { margin: 0; padding: 0 0 22px; border: 0; border-bottom: 1px solid var(--line); }
+.setting-group:last-of-type { padding-bottom: 0; border-bottom: 0; }
 .setting-group legend, .setting-row strong { color: var(--ink); font-weight: 700; }
+.setting-group legend {
+  margin: 0 0 13px; padding: 0; border: 0;
+  font: inherit; font-size: .78125rem; font-weight: 800; letter-spacing: .045em;
+  color: var(--teal-dark);
+}
+.setting-group legend .icon { width: 15px; height: 15px; color: var(--teal); }
+body[data-theme="night"] .setting-group legend { color: var(--gold); }
+body[data-theme="night"] .setting-group legend .icon { color: var(--gold); }
 .setting-help { margin: 2px 0 0; color: var(--muted); font-size: .8125rem; line-height: 1.65; }
-.color-options { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.color-options { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
 .color-swatch { width: 35px; height: 35px; border: 3px solid var(--paper); border-radius: 50%; box-shadow: 0 0 0 1px var(--line); cursor: pointer; transition: transform .16s ease, box-shadow .16s ease; }
 .color-swatch:hover { transform: scale(1.1); }
 .color-swatch:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
@@ -196,9 +206,10 @@ body {
 .color-swatch[data-accent="indigo"] { background: #5145c0; }
 .color-swatch[data-accent="sky"] { background: #0786ad; }
 .color-swatch[data-accent="rose"] { background: #b44780; }
-.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.setting-row:last-child { border-bottom: 0; }
 .setting-row label { margin: 0; }
-.setting-row select { width: min(280px, 55%); }
+.setting-row select { width: min(280px, 100%); max-width: 100%; }
 .font-size-control { display: flex; align-items: center; gap: 10px; }
 .font-size-control output { min-width: 42px; color: var(--muted); text-align: center; }
 .settings-message { margin-top: 15px; color: var(--muted); }
@@ -296,6 +307,7 @@ textarea { resize: vertical; min-height: 79px; }
 .button-primary:hover { box-shadow: 0 10px 24px rgba(14, 92, 84, .32); }
 .button-quiet { background: var(--canvas); color: var(--muted); }
 .button:disabled { cursor: wait; opacity: .6; transform: none; }
+.button:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
 .text-action { padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
 .text-action:hover { color: var(--teal); text-decoration: underline; }
 .text-action.delete:hover { color: var(--rose); }
@@ -912,6 +924,8 @@ body[data-theme="night"] .icon-theme-moon { display: none; }
 
 /* إعدادات التثبيت مرة واحدة وبيان الخصوصية */
 .settings-install { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+.settings-install .button { width: 100%; }
+.settings-install .button + .button { margin-top: 12px; }
 .install-once-btn {
   width: 100%;
   justify-content: center;

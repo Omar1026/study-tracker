@@ -28,6 +28,10 @@
     <symbol id="i-privacy" viewBox="0 0 24 24"><path d="M12 3.2 5 6v5.4c0 4.2 2.8 7.9 7 9.4 4.2-1.5 7-5.2 7-9.4V6l-7-2.8Z"/><path d="M9.2 12.2 11 14l3.9-3.9"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3.4" y="5.4" width="17.2" height="13.2" rx="2.4"/><path d="m4.2 7.2 7.8 6 7.8-6"/></symbol>
     <symbol id="i-suggestion" viewBox="0 0 24 24"><path d="M20.4 12.6a7.9 7.9 0 0 1-8.4 7.9 8.8 8.8 0 0 1-2.8-.6L4.2 21l1.2-4.9A7.9 7.9 0 1 1 20.4 12.6Z"/><path d="M9 11.8h6M9 14.9h3.6"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8.4" cy="9.6" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="8.2" r="1.7" fill="currentColor" stroke="none"/><circle cx="15.6" cy="9.6" r="1.7" fill="currentColor" stroke="none"/><circle cx="8.4" cy="14.4" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1.7" fill="currentColor" stroke="none"/><circle cx="15.6" cy="14.4" r="1.7" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c0-4.2 3.6-6.8 7.5-6.8s7.5 2.6 7.5 6.8"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3.4"/><path d="M4 6v5c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4V6"/><path d="M4 11v5c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4v-5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.3 21a2.1 2.1 0 0 1-2.4-2h3.1a2.1 2.1 0 0 1-2.4 2z"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="M8.6 5.4 18.8 12 8.6 18.6Z" fill="currentColor" stroke="none"/></symbol>
     <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.2l1.9 5.4 5.4 1.9-5.4 1.9L12 17.8l-1.9-5.4-5.4-1.9 5.4-1.9Z"/><path d="M18.6 16.2l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"/></symbol>
   </svg>
@@ -416,7 +420,7 @@
         </section>
         <section class="panel settings-panel" aria-labelledby="settings-heading">
           <h2 id="settings-heading" class="sr-only">الإعدادات</h2>
-          <fieldset class="setting-group"><legend>المظهر</legend><p class="setting-help">اختر لون الأزرار والعناصر، ونوع الخط وحجمه، ثم الوضع النهاري أو الليلي.</p>
+          <fieldset class="setting-group"><legend><svg class="icon" aria-hidden="true"><use href="#i-palette"/></svg><span>المظهر</span></legend><p class="setting-help">اختر لون الأزرار والعناصر، ونوع الخط وحجمه، ثم الوضع النهاري أو الليلي.</p>
             <div class="color-options" aria-label="لون التطبيق">
               <button class="color-swatch" type="button" data-accent="teal" aria-label="أخضر تركوازي" title="أخضر تركوازي"></button><button class="color-swatch" type="button" data-accent="blue" aria-label="أزرق" title="أزرق"></button><button class="color-swatch" type="button" data-accent="purple" aria-label="بنفسجي" title="بنفسجي"></button><button class="color-swatch" type="button" data-accent="green" aria-label="أخضر" title="أخضر"></button><button class="color-swatch" type="button" data-accent="gold" aria-label="ذهبي" title="ذهبي"></button><button class="color-swatch" type="button" data-accent="orange" aria-label="برتقالي" title="برتقالي"></button><button class="color-swatch" type="button" data-accent="indigo" aria-label="نيلي" title="نيلي"></button><button class="color-swatch" type="button" data-accent="sky" aria-label="أزرق سماوي" title="أزرق سماوي"></button><button class="color-swatch" type="button" data-accent="rose" aria-label="وردي داكن" title="وردي داكن"></button>
             </div>
@@ -426,7 +430,7 @@
             <p class="form-message settings-message" id="settings-message" role="status" aria-live="polite">تُحفظ تفضيلات المظهر تلقائيًا على هذا الجهاز.</p>
           </fieldset>
 
-          <fieldset class="setting-group account-tools"><legend>حسابي</legend>
+          <fieldset class="setting-group account-tools"><legend><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><span>حسابي</span></legend>
             <div class="account-row">
               <span class="account-icon" aria-hidden="true">👤</span>
               <div>
@@ -437,7 +441,7 @@
             <p class="setting-help">تُحفظ جلساتك ومهامك وخطتك في حسابك وتتزامن بين أجهزتك.</p>
           </fieldset>
 
-          <fieldset class="setting-group data-tools" id="account-data-group"><legend>بياناتك</legend>
+          <fieldset class="setting-group data-tools" id="account-data-group"><legend><svg class="icon" aria-hidden="true"><use href="#i-database"/></svg><span>بياناتك</span></legend>
             <p class="setting-help">احتفظ بنسخة كاملة من جهودك على جهازك: الجلسات والمهام وخطتك وهدفك اليومي.</p>
             <button class="button button-quiet" type="button" id="export-account-data">تنزيل نسخة من بياناتي</button>
             <p class="setting-help">نقلت جهازًا؟ استعد جلساتك ومهامك وخطتك من ملف النسخة الذي نزّلته سابقًا.</p>
@@ -450,7 +454,7 @@
             </div>
           </fieldset>
 
-          <fieldset class="setting-group notify-tools"><legend>تنبيهات المهام والخطة</legend>
+          <fieldset class="setting-group notify-tools"><legend><svg class="icon" aria-hidden="true"><use href="#i-bell"/></svg><span>تنبيهات المهام والخطة</span></legend>
             <p class="setting-help">تذكير بمهام اليوم وأوقات بنود خطتك أثناء فتح التطبيق. يطلب المتصفح إذنك مرة واحدة، ويمكنك إيقافها متى شئت.</p>
             <div class="notify-row">
               <button class="button button-quiet" type="button" id="notify-toggle">تفعيل التنبيهات</button>
@@ -458,7 +462,7 @@
             </div>
           </fieldset>
 
-          <fieldset class="setting-group settings-install"><legend>التطبيق</legend>
+          <fieldset class="setting-group settings-install"><legend><svg class="icon" aria-hidden="true"><use href="#i-install"/></svg><span>التطبيق</span></legend>
             <button class="button button-quiet install-once-btn" type="button" id="install-settings-btn" aria-label="تثبيت التطبيق على هذا الجهاز"><svg class="icon" aria-hidden="true"><use href="#i-install"/></svg> تثبيت «اجتماع النقط»</button>
             <p class="setting-help">ثبّت التطبيق ليفتح بملء الشاشة ويعمل دون اتصال، بخطوة واحدة.</p>
             <button class="button text-action privacy-btn" type="button" id="privacy-open-btn" aria-label="اقرأ بيان الخصوصية"><svg class="icon" aria-hidden="true"><use href="#i-privacy"/></svg> بيان الخصوصية</button>
@@ -511,16 +515,17 @@
       <div class="privacy-card">
         <button class="privacy-close" id="privacy-close" type="button" aria-label="إغلاق">×</button>
         <h2 id="privacy-heading">بيان الخصوصية — اجتماع النقط</h2>
-        <p><strong>آخر تحديث: ٢٩ أكتوبر ٢٠٢٦.</strong> يهدف التطبيق إلى حفظ تقدمك الدراسي ومزامنته بين أجهزتك عند تسجيل الدخول.</p>
+        <p><strong>آخر تحديث: ٢ نوفمبر ٢٠٢٦.</strong> يهدف التطبيق إلى حفظ تقدمك الدراسي ومزامنته بين أجهزتك عند تسجيل الدخول.</p>
         <ul>
           <li><strong>البيانات التي نحفظها:</strong> البريد الإلكتروني للمصادقة، جلسات الدراسة (المادة والمدة والتاريخ والملاحظة)، المهام ومواعيدها وحالتها، بنود الخطة الأسبوعية، والهدف اليومي.</li>
           <li><strong>مكان الحفظ:</strong> تُحفظ بيانات الدراسة والحساب في مشروع Supabase المرتبط بالتطبيق. إعداد قاعدة البيانات يقيّد الوصول إلى سجلات المستخدم المسجل نفسه فقط. تُحفظ تفضيلات المظهر وحالة التثبيت في مساحة التخزين المحلية للمتصفح.</li>
           <li><strong>الخدمات الخارجية:</strong> يتولى Supabase تسجيل الدخول. تُحمّل ملفات الموقع من GitHub Pages، ومكتبة Supabase من jsDelivr، والخطوط من Google Fonts. قد تتلقى هذه الخدمات بيانات اتصال تقنية عند تحميل مواردها، وفق سياساتها الخاصة.</li>
           <li><strong>كيف تُستخدم بياناتك:</strong> لتسجيل تقدمك الدراسي وعرضه ومزامنته بين أجهزتك. لا يحتوي التطبيق على أدوات إعلانات أو تحليلات.</li>
-          <li><strong>تحكمك ببياناتك:</strong> يمكنك تنزيل نسخة كاملة من بياناتك، أو حذف حسابك وجميع بياناته نهائيًا وفورًا من صفحة «الإعدادات → حذف حسابي وبياناتي». إعدادات قاعدة البيانات تمنع أي وصول لبياناتك سواك.</li>
+          <li><strong>التنبيهات:</strong> تفعّل تنبيهات المهام والخطة من «الإعدادات» بعد موافقتك على إذن المتصفح، وتُعرض محليًا على جهازك دون إرسال بياناتك إلى خدمة تنبيهات خارجية.</li>
+          <li><strong>تحكمك ببياناتك:</strong> يمكنك تنزيل نسخة كاملة من بياناتك، أو استعادتها من ملف نسخة، أو حذف حسابك وجميع بياناته نهائيًا وفورًا بنفسك من «الإعدادات → حذف حسابي وبياناتي»، دون الحاجة إلى مراسلة المطور. إعدادات قاعدة البيانات تمنع أي وصول لبياناتك سواك.</li>
           <li><strong>تنبيه مهم:</strong> لا تضع معلومات شديدة الحساسية في حقل الملاحظات. تُعالج كلمة المرور عبر خدمة مصادقة Supabase ولا تدخل في ملف النسخة الاحتياطية.</li>
         </ul>
-        <p>للاستفسار أو طلب الخصوصية: <a href="mailto:alathry18@gmail.com">alathry18@gmail.com</a>.</p>
+        <p>للتواصل والاستفسار: <a href="mailto:alathry18@gmail.com">alathry18@gmail.com</a>.</p>
       </div>
     </div>
     <footer class="site-footer">
@@ -534,7 +539,6 @@
           <svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>
           <span dir="ltr">alathry18@gmail.com</span>
         </a>
-        <a class="footer-suggest" href="https://github.com/Omar1026/study-tracker/issues/new" target="_blank" rel="noopener noreferrer">أرسل اقتراحًا</a>
       </div>
     </footer>
   </main>
