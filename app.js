@@ -23,7 +23,7 @@
   const recoveryMessage = document.querySelector("#recovery-message");
   const studentArea = document.querySelector("#student-area");
   const fontSelect = document.querySelector("#font-select");
-  const themeSelect = document.querySelector("#theme-select");
+  const themeSwitch = document.querySelector("#theme-switch");
   const fontSizeValue = document.querySelector("#font-size-value");
   const settingsMessage = document.querySelector("#settings-message");
   const signOutButton = document.querySelector("#sign-out");
@@ -172,17 +172,6 @@
     week: ["لا توجد جلسات في آخر ٧ أيام", "أضف جلسة جديدة أو استعرض جلسات الشهر."],
     month: ["لا توجد جلسات هذا الشهر", "ابدأ اليوم وستجد ملخصك هنا."],
   };
-  const PALETTES = {
-    teal: { main: "#0e5c54", soft: "#e4f0ec", night: "#57c5b8" },
-    blue: { main: "#2459a6", soft: "#e5edf8", night: "#87b5ff" },
-    purple: { main: "#7040a0", soft: "#eee7f5", night: "#c8a0f2" },
-    green: { main: "#267343", soft: "#e6f1e9", night: "#80d99a" },
-    gold: { main: "#916400", soft: "#fff2cc", night: "#ffd166" },
-    orange: { main: "#b7610b", soft: "#f7ecdf", night: "#ffc078" },
-    indigo: { main: "#4338a8", soft: "#ecebff", night: "#aaa5ff" },
-    sky: { main: "#076b8c", soft: "#e2f4f8", night: "#70d4ed" },
-    rose: { main: "#a23b72", soft: "#fae8f1", night: "#f09ac3" },
-  };
   const ARABIC_FONTS = {
     ibm: '"IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif',
     cairo: '"Cairo", Tahoma, sans-serif',
@@ -192,7 +181,7 @@
     system: 'system-ui, "Segoe UI", Tahoma, sans-serif',
   };
   const FONT_SCALES = [0.9, 1, 1.1, 1.2];
-  let appearance = { accent: "teal", font: "ibm", fontScale: 1, theme: "day" };
+  let appearance = { font: "ibm", fontScale: 1, theme: "day" };
 
   const pad2 = (value) => String(value).padStart(2, "0");
   const toArabicDigits = (value) => pad2(value).replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[digit]);
@@ -467,7 +456,6 @@
     try {
       const saved = JSON.parse(localStorage.getItem("study-tracker-appearance") || "{}");
       appearance = {
-        accent: PALETTES[saved.accent] ? saved.accent : "teal",
         font: ARABIC_FONTS[saved.font] ? saved.font : "ibm",
         fontScale: FONT_SCALES.includes(saved.fontScale) ? saved.fontScale : 1,
         theme: saved.theme === "night" ? "night" : "day",
@@ -478,23 +466,15 @@
   }
 
   function applyAppearance() {
-    const palette = PALETTES[appearance.accent] || PALETTES.teal;
     const root = document.documentElement;
-    root.style.setProperty("--teal", palette.main);
-    root.style.setProperty("--teal-dark", appearance.theme === "night" ? palette.night : palette.main);
-    root.style.setProperty("--teal-soft", palette.soft);
     root.style.setProperty("--font-ui", ARABIC_FONTS[appearance.font] || ARABIC_FONTS.ibm);
     root.style.setProperty("--root-font-size", (16 * appearance.fontScale) + "px");
     document.body.dataset.theme = appearance.theme;
     themeToggle.setAttribute("aria-pressed", String(appearance.theme === "night"));
     themeToggle.title = appearance.theme === "night" ? "التبديل إلى الوضع النهاري" : "التبديل إلى الوضع الليلي";
-    document.body.classList.add("solid-colors");
-    document.querySelector("#theme-color-meta").content = appearance.theme === "night" ? "#111b17" : palette.main;
+    document.querySelector("#theme-color-meta").content = appearance.theme === "night" ? "#12170f" : "#1c5d46";
     fontSelect.value = appearance.font;
-    themeSelect.value = appearance.theme;
-    document.querySelectorAll(".color-swatch").forEach((swatch) => {
-      swatch.setAttribute("aria-pressed", String(swatch.dataset.accent === appearance.accent));
-    });
+    themeSwitch.checked = appearance.theme === "night";
     const scaleIndex = FONT_SCALES.indexOf(appearance.fontScale);
     fontSizeValue.textContent = ["صغير", "متوسط", "كبير", "كبير جدًا"][scaleIndex] || "متوسط";
     document.querySelector("#font-decrease").disabled = scaleIndex === 0;
@@ -2407,18 +2387,12 @@
     });
   });
   document.querySelector("#auth-switch").addEventListener("click", () => setAuthMode(!isSignUp));
-  document.querySelectorAll(".color-swatch").forEach((swatch) => {
-    swatch.addEventListener("click", () => {
-      appearance.accent = swatch.dataset.accent;
-      saveAppearance();
-    });
-  });
   fontSelect.addEventListener("change", () => {
     appearance.font = fontSelect.value;
     saveAppearance();
   });
-  themeSelect.addEventListener("change", () => {
-    appearance.theme = themeSelect.value;
+  themeSwitch.addEventListener("change", () => {
+    appearance.theme = themeSwitch.checked ? "night" : "day";
     saveAppearance();
   });
   document.querySelector("#font-decrease").addEventListener("click", () => {
@@ -2470,7 +2444,7 @@
   // التبديل السريع بين الوضع النهاري والليلي من الشريط العلوي
   themeToggle.addEventListener("click", () => {
     appearance.theme = appearance.theme === "night" ? "day" : "night";
-    themeSelect.value = appearance.theme;
+    themeSwitch.checked = appearance.theme === "night";
     saveAppearance();
   });
 
@@ -2583,7 +2557,7 @@
     const enabled = notifyPrefsEnabled() && permission === "granted";
     notifyToggle.disabled = permission === "denied";
     if (!notifyToggle.disabled && !enabled) notifyToggle.disabled = false;
-    notifyToggle.textContent = enabled ? "إيقاف التنبيهات" : "تفعيل التنبيهات";
+    notifyToggle.checked = enabled;
     if (notifyStatus) {
       if (permission === "denied") notifyStatus.textContent = "خيار التنبيه محظور من إعدادات المتصفح لهذا الموقع.";
       else if (enabled) notifyStatus.textContent = "التنبيهات مفعّلة: مهام اليوم وأوقات خطتك ✦";
@@ -2592,11 +2566,11 @@
     }
   }
   if (notifyToggle) {
-    notifyToggle.addEventListener("click", async () => {
-      if (!("Notification" in window)) return syncNotifyUi();
+    notifyToggle.addEventListener("change", async () => {
+      if (!("Notification" in window)) { notifyToggle.checked = false; return syncNotifyUi(); }
       const permission = Notification.permission;
-      if (permission === "denied") return syncNotifyUi();
-      if (notifyPrefsEnabled()) {
+      if (permission === "denied") { notifyToggle.checked = false; return syncNotifyUi(); }
+      if (!notifyToggle.checked) {
         setNotifyPref(false);
         return;
       }
@@ -2606,6 +2580,7 @@
           setNotifyPref(true);
           showAppNotification("اجتماع النقط", "تم تفعيل التنبيهات — سنذكّرك بمهامك وأوقات خطتك ✦", "iitimaal-welcome");
         } else {
+          notifyToggle.checked = false;
           syncNotifyUi();
         }
       } catch (error) {

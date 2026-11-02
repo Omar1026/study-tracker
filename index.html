@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0e5c54" id="theme-color-meta">
+  <meta name="theme-color" content="#1c5d46" id="theme-color-meta">
   <meta name="description" content="اجتماع النقط: سجّل جلسات دراستك، نظّم مهامك وخطة أسبوعك، وتابع تقدّمك من أي جهاز.">
   <title>اجتماع النقط — رفيقك في رحلة العلم</title>
   <link rel="manifest" href="manifest.json">
@@ -27,9 +27,13 @@
     <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 3.4v11.2"/><path d="M7.8 10.6 12 14.8l4.2-4.2"/><path d="M4.2 16.4v1.8a2 2 0 0 0 2 2h11.6a2 2 0 0 0 2-2v-1.8"/></symbol>
     <symbol id="i-privacy" viewBox="0 0 24 24"><path d="M12 3.2 5 6v5.4c0 4.2 2.8 7.9 7 9.4 4.2-1.5 7-5.2 7-9.4V6l-7-2.8Z"/><path d="M9.2 12.2 11 14l3.9-3.9"/></symbol>
     <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3.4" y="5.4" width="17.2" height="13.2" rx="2.4"/><path d="m4.2 7.2 7.8 6 7.8-6"/></symbol>
-    <symbol id="i-suggestion" viewBox="0 0 24 24"><path d="M20.4 12.6a7.9 7.9 0 0 1-8.4 7.9 8.8 8.8 0 0 1-2.8-.6L4.2 21l1.2-4.9A7.9 7.9 0 1 1 20.4 12.6Z"/><path d="M9 11.8h6M9 14.9h3.6"/></symbol>
-    <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8.4" cy="9.6" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="8.2" r="1.7" fill="currentColor" stroke="none"/><circle cx="15.6" cy="9.6" r="1.7" fill="currentColor" stroke="none"/><circle cx="8.4" cy="14.4" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1.7" fill="currentColor" stroke="none"/><circle cx="15.6" cy="14.4" r="1.7" fill="currentColor" stroke="none"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c0-4.2 3.6-6.8 7.5-6.8s7.5 2.6 7.5 6.8"/></symbol>
+    <symbol id="i-font" viewBox="0 0 24 24"><path d="M4.5 19.5 10.4 5h3.2l5.9 14.5"/><path d="M7.1 14.2h9.8"/></symbol>
+    <symbol id="i-font-size" viewBox="0 0 24 24"><path d="M3.5 19 9 5h3l5.5 14"/><path d="M6.2 13.6h8.6"/><path d="M18.5 19v-6.5"/><path d="m16 15 2.5-2.5 2.5 2.5"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="m7.8 10.6 4.2 4.2 4.2-4.2"/><path d="M4.5 20.5h15"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 14.5v-11"/><path d="m7.8 7.4 4.2-4.2 4.2 4.2"/><path d="M4.5 20.5h15"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 6.5h15"/><path d="M9 6.5V4.8a1.3 1.3 0 0 1 1.3-1.3h3.4A1.3 1.3 0 0 1 15 4.8v1.7"/><path d="M6.5 6.5 7.3 20a1.3 1.3 0 0 0 1.3 1.2h6.8a1.3 1.3 0 0 0 1.3-1.2l.8-13.5"/><path d="M10.2 10.2v7M13.8 10.2v7"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M15 5.2 8 12l7 6.8"/></symbol>
     <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3.4"/><path d="M4 6v5c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4V6"/><path d="M4 11v5c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4v-5"/></symbol>
     <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.3 21a2.1 2.1 0 0 1-2.4-2h3.1a2.1 2.1 0 0 1-2.4 2z"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="M8.6 5.4 18.8 12 8.6 18.6Z" fill="currentColor" stroke="none"/></symbol>
@@ -413,60 +417,135 @@
       </div>
       </div>
       <div class="app-page hidden" id="settings-page">
-        <section class="progress-heading animate-in">
-          <p class="eyebrow">خصص تجربتك</p>
+        <header class="settings-header">
+          <button class="settings-back" type="button" aria-label="الرجوع" title="الرجوع">›</button>
           <h1>الإعدادات</h1>
-          <p class="home-subtitle">نظّم مظهرك، وتحكّم في بياناتك، وأدِر حسابك من مكان واحد.</p>
-        </section>
-        <section class="panel settings-panel" aria-labelledby="settings-heading">
-          <h2 id="settings-heading" class="sr-only">الإعدادات</h2>
-          <fieldset class="setting-group"><legend><svg class="icon" aria-hidden="true"><use href="#i-palette"/></svg><span>المظهر</span></legend><p class="setting-help">اختر لون الأزرار والعناصر، ونوع الخط وحجمه، ثم الوضع النهاري أو الليلي.</p>
-            <div class="color-options" aria-label="لون التطبيق">
-              <button class="color-swatch" type="button" data-accent="teal" aria-label="أخضر تركوازي" title="أخضر تركوازي"></button><button class="color-swatch" type="button" data-accent="blue" aria-label="أزرق" title="أزرق"></button><button class="color-swatch" type="button" data-accent="purple" aria-label="بنفسجي" title="بنفسجي"></button><button class="color-swatch" type="button" data-accent="green" aria-label="أخضر" title="أخضر"></button><button class="color-swatch" type="button" data-accent="gold" aria-label="ذهبي" title="ذهبي"></button><button class="color-swatch" type="button" data-accent="orange" aria-label="برتقالي" title="برتقالي"></button><button class="color-swatch" type="button" data-accent="indigo" aria-label="نيلي" title="نيلي"></button><button class="color-swatch" type="button" data-accent="sky" aria-label="أزرق سماوي" title="أزرق سماوي"></button><button class="color-swatch" type="button" data-accent="rose" aria-label="وردي داكن" title="وردي داكن"></button>
-            </div>
-            <div class="setting-row"><div><label for="font-select">نوع الخط العربي</label><p class="setting-help">يُحفظ اختيارك على هذا الجهاز.</p></div><select id="font-select"><option value="ibm">IBM Plex Arabic</option><option value="cairo">القاهرة — Cairo</option><option value="tajawal">تجوال — Tajawal</option><option value="noto-sans">Noto Sans Arabic</option><option value="noto-naskh">Noto Naskh Arabic</option><option value="system">خط الجهاز الافتراضي</option></select></div>
-            <div class="setting-row"><div><strong>حجم الخط</strong><p class="setting-help">كبّر النص أو صغّره بما يناسبك.</p></div><div class="font-size-control"><button class="button button-quiet" type="button" id="font-decrease" aria-label="تصغير الخط">أ−</button><output id="font-size-value" aria-live="polite">متوسط</output><button class="button button-quiet" type="button" id="font-increase" aria-label="تكبير الخط">أ+</button></div></div>
-            <div class="setting-row"><div><label for="theme-select">المظهر</label><p class="setting-help">اختر الوضع النهاري أو الليلي.</p></div><select id="theme-select"><option value="day">نهاري</option><option value="night">ليلي</option></select></div>
-            <p class="form-message settings-message" id="settings-message" role="status" aria-live="polite">تُحفظ تفضيلات المظهر تلقائيًا على هذا الجهاز.</p>
-          </fieldset>
+        </header>
 
-          <fieldset class="setting-group account-tools"><legend><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><span>حسابي</span></legend>
-            <div class="account-row">
-              <span class="account-icon" aria-hidden="true">👤</span>
-              <div>
-                <p class="account-label">مسجّل الدخول ببريد</p>
-                <strong id="settings-email" dir="ltr">—</strong>
+        <!-- قسم عام -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">عام</h2>
+          <div class="settings-card">
+            <label class="settings-row settings-row-switch" for="theme-switch">
+              <span class="settings-row-icon"><svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg></span>
+              <div class="settings-row-text">
+                <strong>الوضع الداكن</strong>
+                <span>تفعيل المظهر الداكن للتطبيق</span>
               </div>
+              <span class="switch">
+                <input type="checkbox" id="theme-switch" role="switch">
+                <span class="switch-track" aria-hidden="true"></span>
+              </span>
+            </label>
+          </div>
+          <div class="settings-card">
+            <div class="settings-row settings-row-action">
+              <span class="settings-row-icon"><svg class="icon" aria-hidden="true"><use href="#i-font"/></svg></span>
+              <div class="settings-row-text">
+                <strong>نوع الخط العربي</strong>
+                <span>يُحفظ اختيارك على هذا الجهاز.</span>
+              </div>
+              <select id="font-select" aria-label="نوع الخط العربي"><option value="ibm">IBM Plex Arabic</option><option value="cairo">القاهرة — Cairo</option><option value="tajawal">تجوال — Tajawal</option><option value="noto-sans">Noto Sans Arabic</option><option value="noto-naskh">Noto Naskh Arabic</option><option value="system">خط الجهاز الافتراضي</option></select>
+              <svg class="icon settings-row-chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
             </div>
-            <p class="setting-help">تُحفظ جلساتك ومهامك وخطتك في حسابك وتتزامن بين أجهزتك.</p>
-          </fieldset>
-
-          <fieldset class="setting-group data-tools" id="account-data-group"><legend><svg class="icon" aria-hidden="true"><use href="#i-database"/></svg><span>بياناتك</span></legend>
-            <p class="setting-help">احتفظ بنسخة كاملة من جهودك على جهازك: الجلسات والمهام وخطتك وهدفك اليومي.</p>
-            <button class="button button-quiet" type="button" id="export-account-data">تنزيل نسخة من بياناتي</button>
-            <p class="setting-help">نقلت جهازًا؟ استعد جلساتك ومهامك وخطتك من ملف النسخة الذي نزّلته سابقًا.</p>
-            <button class="button button-quiet" type="button" id="import-account-data">استعادة من ملف نسخة</button>
-            <input type="file" id="import-file" accept=".json,application/json" hidden>
-            <div class="danger-zone">
-              <p class="setting-help">حذف فوري ونهائي يزيل حسابك وكل ما ترتبط به من جلسات ومهام وخطط، ولا يمكن الرجوع عنه.</p>
-              <button class="button danger-btn" type="button" id="delete-account-btn">حذف حسابي وبياناتي نهائيًا</button>
-              <p class="form-message" id="delete-account-message" role="status" aria-live="polite"></p>
+          </div>
+          <div class="settings-card">
+            <div class="settings-row settings-row-action">
+              <span class="settings-row-icon"><svg class="icon" aria-hidden="true"><use href="#i-font-size"/></svg></span>
+              <div class="settings-row-text">
+                <strong>حجم الخط</strong>
+                <span>كبّر النص أو صغّره بما يناسبك.</span>
+              </div>
+              <div class="font-size-control"><button class="button button-quiet" type="button" id="font-decrease" aria-label="تصغير الخط">أ−</button><output id="font-size-value" aria-live="polite">متوسط</output><button class="button button-quiet" type="button" id="font-increase" aria-label="تكبير الخط">أ+</button></div>
+              <svg class="icon settings-row-chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
             </div>
-          </fieldset>
-
-          <fieldset class="setting-group notify-tools"><legend><svg class="icon" aria-hidden="true"><use href="#i-bell"/></svg><span>تنبيهات المهام والخطة</span></legend>
-            <p class="setting-help">تذكير بمهام اليوم وأوقات بنود خطتك أثناء فتح التطبيق. يطلب المتصفح إذنك مرة واحدة، ويمكنك إيقافها متى شئت.</p>
-            <div class="notify-row">
-              <button class="button button-quiet" type="button" id="notify-toggle">تفعيل التنبيهات</button>
-              <span class="setting-help" id="notify-status">سيطلب المتصفح إذنك عند التفعيل.</span>
+          </div>
+          <div class="settings-card">
+            <div class="settings-row settings-row-action">
+              <span class="settings-row-icon"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></span>
+              <div class="settings-row-text">
+                <strong>حسابي</strong>
+                <span class="account-email" id="settings-email" dir="ltr">—</span>
+              </div>
+              <svg class="icon settings-row-chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
             </div>
-          </fieldset>
+          </div>
+          <p class="form-message settings-message" id="settings-message" role="status" aria-live="polite">تُحفظ تفضيلات المظهر تلقائيًا على هذا الجهاز.</p>
+        </section>
 
-          <fieldset class="setting-group settings-install"><legend><svg class="icon" aria-hidden="true"><use href="#i-install"/></svg><span>التطبيق</span></legend>
-            <button class="button button-quiet install-once-btn" type="button" id="install-settings-btn" aria-label="تثبيت التطبيق على هذا الجهاز"><svg class="icon" aria-hidden="true"><use href="#i-install"/></svg> تثبيت «اجتماع النقط»</button>
-            <p class="setting-help">ثبّت التطبيق ليفتح بملء الشاشة ويعمل دون اتصال، بخطوة واحدة.</p>
-            <button class="button text-action privacy-btn" type="button" id="privacy-open-btn" aria-label="اقرأ بيان الخصوصية"><svg class="icon" aria-hidden="true"><use href="#i-privacy"/></svg> بيان الخصوصية</button>
-          </fieldset>
+        <!-- قسم الإشعارات -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">الإشعارات</h2>
+          <div class="settings-card">
+            <label class="settings-row settings-row-switch" for="notify-toggle">
+              <span class="settings-row-icon"><svg class="icon" aria-hidden="true"><use href="#i-bell"/></svg></span>
+              <div class="settings-row-text">
+                <strong>تفعيل الإشعارات</strong>
+                <span id="notify-status">سيطلب المتصفح إذنك عند التفعيل.</span>
+              </div>
+              <span class="switch">
+                <input type="checkbox" id="notify-toggle" role="switch">
+                <span class="switch-track" aria-hidden="true"></span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <!-- قسم خيارات عامة -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">خيارات عامة</h2>
+          <div class="settings-card">
+            <button class="settings-row settings-row-action" type="button" id="export-account-data">
+              <span class="settings-row-icon"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></span>
+              <div class="settings-row-text">
+                <strong>تنزيل نسخة من بياناتي</strong>
+                <span>احتفظ بنسخة كاملة من جلساتك ومهامك وخطتك على جهازك.</span>
+              </div>
+              <svg class="icon settings-row-chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </button>
+            <button class="settings-row settings-row-action" type="button" id="import-account-data">
+              <span class="settings-row-icon"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg></span>
+              <div class="settings-row-text">
+                <strong>استعادة من ملف نسخة</strong>
+                <span>استعد بياناتك من نسخة نزّلتها سابقًا.</span>
+              </div>
+              <svg class="icon settings-row-chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </button>
+          </div>
+          <div class="settings-card settings-card-danger">
+            <button class="settings-row settings-row-action settings-row-danger" type="button" id="delete-account-btn">
+              <span class="settings-row-icon settings-row-icon-danger"><svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg></span>
+              <div class="settings-row-text">
+                <strong>حذف حسابي وبياناتي نهائيًا</strong>
+                <span>حذف فوري ونهائي يزيل حسابك وكل ما ترتبط به، ولا يمكن الرجوع عنه.</span>
+              </div>
+              <svg class="icon settings-row-chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </button>
+          </div>
+          <p class="form-message" id="delete-account-message" role="status" aria-live="polite"></p>
+        </section>
+
+        <!-- قسم التطبيق -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">التطبيق</h2>
+          <div class="settings-card">
+            <button class="settings-row settings-row-action" type="button" id="install-settings-btn" aria-label="تثبيت التطبيق على هذا الجهاز">
+              <span class="settings-row-icon"><svg class="icon" aria-hidden="true"><use href="#i-install"/></svg></span>
+              <div class="settings-row-text">
+                <strong>تثبيت «اجتماع النقط»</strong>
+                <span>افتح التطبيق بملء الشاشة واعمل دون اتصال.</span>
+              </div>
+              <svg class="icon settings-row-chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </button>
+            <button class="settings-row settings-row-action" type="button" id="privacy-open-btn" aria-label="اقرأ بيان الخصوصية">
+              <span class="settings-row-icon"><svg class="icon" aria-hidden="true"><use href="#i-privacy"/></svg></span>
+              <div class="settings-row-text">
+                <strong>بيان الخصوصية</strong>
+                <span>كيف نحفظ بياناتك ونحميها.</span>
+              </div>
+              <svg class="icon settings-row-chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </button>
+          </div>
         </section>
       </div>
     </div>
