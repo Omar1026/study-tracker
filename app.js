@@ -916,7 +916,6 @@
 
   async function loadSessions(silent = false) {
     if (demoMode) return;
-    if (!silent) showMessage(cloudMessage, "جارٍ تحميل جلساتك...");
     const { data, error } = await supabaseClient
       .from("study_sessions")
       .select("id, subject, duration, note, study_date, created_at")
@@ -975,7 +974,7 @@
         return;
       }
       if (result.data.user) {
-        showMessage(authMessage, "تم تسجيل الدخول، جارٍ تحميل بياناتك...", true);
+        showMessage(authMessage, "تم تسجيل الدخول بنجاح ✦", true);
         await setUser(result.data.user);
       }
     } catch (error) {
